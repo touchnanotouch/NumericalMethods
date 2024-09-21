@@ -1,10 +1,10 @@
 #include "../headers/Vector.h"
-#include "../headers/Matrix.h"
 
 
 template class Vector<int>;
 template class Vector<float>;
 template class Vector<double>;
+
 
 template<typename T>
 Vector<T>::Vector(
@@ -55,17 +55,43 @@ Vector<T>& Vector<T>::operator=(
 }
 
 template<typename T>
-size_t Vector<T>::get_row_count(
+size_t Vector<T>::row_count(
     
 ) const {
     return _row_cnt;
 }
 
 template<typename T>
-T* Vector<T>::get_vector(
+T* Vector<T>::vec(
 
 ) const {
     return _vec;
+}
+
+template<typename T>
+void Vector<T>::set_row_count(
+    size_t row_count
+) {
+    _row_cnt = row_count;
+}
+
+template<typename T>
+void Vector<T>::set_vector(
+    T* vector
+) {
+    for (int i = 0; i < _row_cnt; i++) {
+        _vec[i] = vector[i];
+    }
+}
+
+template<typename T>
+void Vector<T>::swap(
+    T a,
+    T b
+) {
+    T temp = a;
+    a = b;
+    b = temp;
 }
 
 template<typename T>
@@ -87,7 +113,7 @@ bool Vector<T>::operator==(
         return false;
     }
 
-    const double eps = 1e-3;
+    const double eps = 1e-5;
     for (size_t i = 0; i < _row_cnt; i++) {
         if (_vec[i] != other._vec[i]) {
             return false;
@@ -129,8 +155,6 @@ Vector<T> Vector<T>::operator-(
     return result;
 }
 
-// 
-
 template<typename T>
 Vector<T> Vector<T>::operator*(
     const T& scalar
@@ -143,6 +167,7 @@ Vector<T> Vector<T>::operator*(
     return result;
 }
 
+
 template<typename T>
 Vector<T> Vector<T>::operator/(
     const T& scalar
@@ -150,6 +175,18 @@ Vector<T> Vector<T>::operator/(
     Vector result(_row_cnt);
     for (size_t i = 0; i < _row_cnt; i++) {
         result._vec[i] = _vec[i] / scalar;
+    }
+
+    return result;
+}
+
+template<typename T>
+T Vector<T>::norm(
+
+) const {
+    T result = 0;
+    for (size_t i = 0; i < row_count(); i++) {
+        result += std::abs(vec()[i]);
     }
 
     return result;

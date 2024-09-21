@@ -1,42 +1,10 @@
 #include "../headers/Matrix.h"
-#include "../headers/Vector.h"
 
 
 template class Matrix<int>;
 template class Matrix<float>;
 template class Matrix<double>;
 
-template<typename T>
-Matrix<T> Matrix<T>::gaussian_elimination(
-    Matrix<T>& matrix
-) {
-    Matrix result(matrix._row_cnt, matrix._col_cnt);
-    for (size_t i = 0; i < matrix._row_cnt; i++) {
-        for (size_t j = 0; j < matrix._col_cnt; j++) {
-            result._mat[i][j] = matrix._mat[i][j];
-        }
-    }
-
-    for (size_t r = 0; r < result._row_cnt; r++) {
-        T diag_val = result._mat[r][r];
-
-        for (size_t i = r + 1; i < result._row_cnt; i++) {
-            T factor = result._mat[i][r] / diag_val;
-            for (size_t j = r; j < result._col_cnt; j++) {
-                result._mat[i][j] -= result._mat[r][j] * factor;
-            }
-        }
-
-        for (size_t j = r + 1; j < result._col_cnt; j++) {
-            T factor = result._mat[j][r] / diag_val;
-            for (size_t k = r; k < result._col_cnt; k++) {
-                result._mat[j][k] -= result._mat[r][k] * factor;
-            }
-        }
-    }
-
-    return result;
-}
 
 template<typename T>
 Matrix<T>::Matrix(
@@ -100,24 +68,89 @@ Matrix<T>& Matrix<T>::operator=(
 }
 
 template<typename T>
-size_t Matrix<T>::get_row_count(
+size_t Matrix<T>::row_count(
 
 ) const { 
     return _row_cnt;
 }
 
 template<typename T>
-size_t Matrix<T>::get_col_count(
+size_t Matrix<T>::col_count(
 
 ) const {
     return _col_cnt;
 }
 
 template<typename T>
-T** Matrix<T>::get_matrix(
+T** Matrix<T>::mat(
 
 ) const {
     return _mat;
+}
+
+template<typename T>
+void Matrix<T>::set_row_count(
+    size_t row_count
+) {
+    _row_cnt = row_count;
+}
+
+template<typename T>
+void Matrix<T>::set_col_count(
+    size_t col_count
+) {
+    _col_cnt = col_count;
+}
+
+template<typename T>
+void Matrix<T>::set_row(
+    T* row,
+    int index
+) {
+    for (int i = 0; i < _row_cnt; i++) {
+        _mat[index][i] = row[i];
+    }
+}
+
+template<typename T>
+void Matrix<T>::set_col(
+    T* col,
+    int index
+) {
+    for (int i = 0; i < _col_cnt; i++) {
+        _mat[i][index] = col[i];
+    }
+}
+
+template<typename T>
+void Matrix<T>::set_matrix(
+    T** matrix
+) {
+    for (int i = 0; i < _row_cnt; i++) {
+        for (int j = 0; j < _col_cnt; j++) {
+            _mat[i][j] = matrix[i][j];
+        }
+    }
+}
+
+template<typename T>
+void Matrix<T>::swap(
+    T* a,
+    T* b
+) {
+    T* temp = a;
+    a = b;
+    b = temp;
+}
+
+template<typename T>
+void Matrix<T>::swap(
+    T a,
+    T b
+) {
+    T temp = a;
+    a = b;
+    b = temp;
 }
 
 template<typename T>
@@ -211,14 +244,14 @@ template<typename T>
 Vector<T> Matrix<T>::operator*(
     const Vector<T>& vector
 ) const {
-    if (_col_cnt != vector.get_row_count()) {
+    if (_col_cnt != vector.row_count()) {
         throw std::invalid_argument("Unmatching matrix and vector sizes");
     }
 
     Vector<T> result(_row_cnt);
     for (int i = 0; i < _row_cnt; i++) {
         for (int j = 0; j < _col_cnt; j++) {
-            T* vec = vector.get_vector();
+            T* vec = vector.vec();
             result[i] += _mat[i][j] * vec[j];
         }
     }
@@ -258,10 +291,10 @@ template<typename T>
 void Matrix<T>::transpose(
 
 ) {
-    Matrix result(_col_cnt, _row_cnt);
-    for (int i = 0; i < _row_cnt; i++) {
-        for (int j = 0; j < _col_cnt; j++) {
-            result._mat[j][i] = _mat[i][j];
+    Matrix result(col_count(), row_count());
+    for (int i = 0; i < row_count(); i++) {
+        for (int j = 0; j < col_count(); j++) {
+            result[j][i] = mat()[i][j];
         }
     }
     
@@ -272,30 +305,43 @@ template<typename T>
 Matrix<T> Matrix<T>::transposed(
     
 ) const {
-    Matrix result(_col_cnt, _row_cnt);
-    for (int i = 0; i < _row_cnt; i++) {
-        for (int j = 0; j < _col_cnt; j++) {
-            result._mat[j][i] = _mat[i][j];
+    Matrix result(col_count(), row_count());
+    for (int i = 0; i < row_count(); i++) {
+        for (int j = 0; j < col_count(); j++) {
+            result[j][i] = mat()[i][j];
         }
     }
     
     return result;
 }
 
+//template<typename T>
+//void Matrix<T>::inverse(
+//
+//) {
+//    ;
+//}
+//
+//template<typename T>
+//Matrix<T> Matrix<T>::inversed(
+//
+//) {
+//    return *this;
+//}
+
 template<typename T>
 double Matrix<T>::determinant(
 
-) {
-    if (_row_cnt != _col_cnt) {
+) const {
+    if (row_count() != col_count()) {
         throw std::invalid_argument("Unmatching matrix size");
     }
 
-    Matrix temp = gaussian_elimination(*this);
+    // TODO
+
+    int n = row_count();
 
     double det = 1;
-    for (int i = 0; i < temp._row_cnt; i++) {
-        det *= temp[i][i];
-    }
 
     return det;
 }
@@ -303,23 +349,59 @@ double Matrix<T>::determinant(
 template<typename T>
 int Matrix<T>::rank(
 
-) {
-    Matrix temp = gaussian_elimination(*this);
+) const {
+    if (row_count() != col_count()) {
+        throw std::invalid_argument("Unmatching matrix size");
+    }
 
-    int rank = 0;
-    for (size_t i = 0; i < temp._row_cnt; i++) {
-        bool is_zero_row = true;
-        for (size_t j = 0; j < temp._col_cnt; j++) {
-            if (std::abs(temp._mat[i][j]) > 1e-10) {
-                is_zero_row = false;
-                break;
+    // TODO
+
+    int n = (int)row_count();
+
+    int rank = n - 1;
+
+    return rank;
+}
+
+template<typename T>
+void Matrix<T>::to_up_diag(
+
+) {
+    int n = (int)row_count();
+
+    for (int r = 0; r < n; r++) {
+        T diag = mat()[r][r];
+        for (int c = r + 1; c < n; c++) {
+            
+        }
+    }
+}
+
+template<typename T>
+bool Matrix<T>::is_diag_d(
+
+) const {
+    for (int i = 0; i < row_count(); i++) {
+        T diag = std::abs(mat()[i][i]);
+        
+        T sum = 0;
+        for (size_t j = 0; j < col_count(); j++) {
+            if (i != j) {
+                sum += std::abs(mat()[i][j]);
             }
         }
 
-        if (!is_zero_row) {
-            rank++;
+        if (sum > diag) {
+            return false;
         }
     }
 
-    return rank;
+    return true;
+}
+
+template<typename T>
+bool Matrix<T>::to_diag_d(
+    
+) {
+    return false;
 }

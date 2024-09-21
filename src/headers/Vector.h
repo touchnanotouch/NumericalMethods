@@ -8,6 +8,7 @@ class Vector {
     private:
         size_t _row_cnt;
         T* _vec;
+
     public:
         Vector(
             size_t row_count
@@ -40,13 +41,26 @@ class Vector {
             Vector&& other
         );
 
-        size_t get_row_count(
+        size_t row_count(
 
         ) const;
 
-        T* get_vector(
+        T* vec(
 
         ) const;
+
+        void set_row_count(
+            size_t row_count
+        );
+
+        void set_vector(
+            T* vector
+        );
+
+        void swap(
+            T a,
+            T b
+        );
 
         friend std::ostream& operator<<(
             std::ostream& out,
@@ -76,13 +90,15 @@ class Vector {
             const Vector& other
         ) const;
 
-        //
-
         Vector operator*(
             const T& scalar
         ) const;
 
         Vector operator/(
             const T& scalar
+        ) const;
+
+        T norm(
+            
         ) const;
 };

@@ -12,9 +12,6 @@ class Matrix {
         size_t _col_cnt;
         T** _mat;
 
-        Matrix gaussian_elimination(
-            Matrix& matrix
-        );
     public:
         Matrix(
             size_t row_count,
@@ -55,17 +52,49 @@ class Matrix {
             Matrix&& other
         );
 
-        size_t get_row_count(
+        size_t row_count(
 
         ) const;
 
-        size_t get_col_count(
+        size_t col_count(
 
         ) const;
 
-        T** get_matrix(
+        T** mat(
             
         ) const;
+
+        void set_row_count(
+            size_t row_count
+        );
+
+        void set_col_count(
+            size_t col_count
+        );
+
+        void set_row(
+            T* row,
+            int index
+        );
+
+        void set_col(
+            T* col,
+            int index
+        );
+
+        void set_matrix(
+            T** matrix
+        );
+
+        void swap(
+            T* a,
+            T* b
+        );
+
+        void swap(
+            T a,
+            T b
+        );
 
         friend std::ostream& operator<<(
             std::ostream& out,
@@ -121,11 +150,31 @@ class Matrix {
             
         ) const;
 
+        //void inverse(
+
+        //);
+
+        //Matrix inversed(
+
+        //);
+
         double determinant(
+
+        ) const;
+
+        int rank(
+
+        ) const;
+
+        void to_up_diag(
 
         );
 
-        int rank(
+        bool is_diag_d(
+
+        ) const;
+
+        bool to_diag_d(
 
         );
 };

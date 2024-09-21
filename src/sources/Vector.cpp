@@ -7,6 +7,46 @@ template class Vector<double>;
 
 
 template<typename T>
+size_t Vector<T>::row_count(
+    
+) const {
+    return _row_cnt;
+}
+
+template<typename T>
+T* Vector<T>::vec(
+
+) const {
+    return _vec;
+}
+
+template<typename T>
+void Vector<T>::set_row_count(
+    size_t row_count
+) {
+    _row_cnt = row_count;
+}
+
+template<typename T>
+void Vector<T>::set_vector(
+    T* vector
+) {
+    for (int i = 0; i < _row_cnt; i++) {
+        _vec[i] = vector[i];
+    }
+}
+
+template<typename T>
+void Vector<T>::swap(
+    T& a,
+    T& b
+) {
+    T temp = a;
+    a = b;
+    b = temp;
+}
+
+template<typename T>
 Vector<T>::Vector(
     const Vector<T>& other
 ) {
@@ -52,46 +92,6 @@ Vector<T>& Vector<T>::operator=(
     }
 
     return *this;
-}
-
-template<typename T>
-size_t Vector<T>::row_count(
-    
-) const {
-    return _row_cnt;
-}
-
-template<typename T>
-T* Vector<T>::vec(
-
-) const {
-    return _vec;
-}
-
-template<typename T>
-void Vector<T>::set_row_count(
-    size_t row_count
-) {
-    _row_cnt = row_count;
-}
-
-template<typename T>
-void Vector<T>::set_vector(
-    T* vector
-) {
-    for (int i = 0; i < _row_cnt; i++) {
-        _vec[i] = vector[i];
-    }
-}
-
-template<typename T>
-void Vector<T>::swap(
-    T a,
-    T b
-) {
-    T temp = a;
-    a = b;
-    b = temp;
 }
 
 template<typename T>

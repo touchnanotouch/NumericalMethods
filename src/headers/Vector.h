@@ -25,22 +25,6 @@ class Vector {
             delete[] _vec;
         };
 
-        Vector(
-            const Vector& other
-        );
-
-        Vector& operator=(
-            const Vector& other
-        );
-
-        Vector(
-            Vector&& other
-        );
-
-        Vector& operator=(
-            Vector&& other
-        );
-
         size_t row_count(
 
         ) const;
@@ -58,8 +42,24 @@ class Vector {
         );
 
         void swap(
-            T a,
-            T b
+            T& a,
+            T& b
+        );
+
+        Vector(
+            const Vector& other
+        );
+
+        Vector& operator=(
+            const Vector& other
+        );
+
+        Vector(
+            Vector&& other
+        );
+
+        Vector& operator=(
+            Vector&& other
         );
 
         friend std::ostream& operator<<(

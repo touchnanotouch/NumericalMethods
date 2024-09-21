@@ -36,22 +36,6 @@ class Matrix {
             delete[] _mat;
         };
 
-        Matrix(
-            const Matrix& other
-        );
-
-        Matrix& operator=(
-            const Matrix& other
-        );
-
-        Matrix(
-            Matrix&& other
-        );
-
-        Matrix& operator=(
-            Matrix&& other
-        );
-
         size_t row_count(
 
         ) const;
@@ -92,8 +76,24 @@ class Matrix {
         );
 
         void swap(
-            T a,
-            T b
+            T& a,
+            T& b
+        );
+
+        Matrix(
+            const Matrix& other
+        );
+
+        Matrix& operator=(
+            const Matrix& other
+        );
+
+        Matrix(
+            Matrix&& other
+        );
+
+        Matrix& operator=(
+            Matrix&& other
         );
 
         friend std::ostream& operator<<(
@@ -142,13 +142,13 @@ class Matrix {
             const T& scalar
         ) const;
 
-        void transpose(
-
-        );
-
         Matrix transposed(
             
         ) const;
+
+        void transpose(
+
+        );
 
         //void inverse(
 
@@ -165,10 +165,6 @@ class Matrix {
         int rank(
 
         ) const;
-
-        void to_up_diag(
-
-        );
 
         bool is_diag_d(
 

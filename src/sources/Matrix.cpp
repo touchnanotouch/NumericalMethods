@@ -5,68 +5,6 @@ template class Matrix<int>;
 template class Matrix<float>;
 template class Matrix<double>;
 
-
-template<typename T>
-Matrix<T>::Matrix(
-    const Matrix<T>& other
-) {
-    _row_cnt = other._row_cnt;
-    _col_cnt = other._col_cnt;
-
-    _mat = new T*[_row_cnt];
-    for (size_t i = 0; i < _row_cnt; i++) {
-        _mat[i] = new T[_col_cnt];
-        for (size_t j = 0; j < _col_cnt; j++) {
-            _mat[i][j] = other._mat[i][j];
-        }
-    }
-}
-
-template<typename T>
-Matrix<T>& Matrix<T>::operator=(
-    const Matrix<T>& other
-) {
-    if (this != &other) {
-        for (size_t i = 0; i < _row_cnt; i++) {
-            delete[] _mat[i];
-        }
-        delete[] _mat;
-
-        _row_cnt = other._row_cnt;
-        _col_cnt = other._col_cnt;
-        _mat = new T*[_row_cnt];
-        for (size_t i = 0; i < _row_cnt; i++) {
-            _mat[i] = new T[_col_cnt];
-            for (size_t j = 0; j < _col_cnt; j++) {
-                _mat[i][j] = other._mat[i][j];
-            }
-        }
-    }
-
-    return *this;
-}
-
-template<typename T>
-Matrix<T>::Matrix(
-    Matrix<T>&& other
-) : _row_cnt(other._row_cnt), _col_cnt(other._col_cnt), _mat(other._mat) {
-    other._mat = nullptr;
-}
-
-template<typename T>
-Matrix<T>& Matrix<T>::operator=(
-    Matrix<T>&& other
-) {
-    if (this != &other) {
-        _row_cnt = other._row_cnt;
-        _col_cnt = other._col_cnt;
-        _mat = other._mat;
-        other._mat = nullptr;
-    }
-
-    return *this;
-}
-
 template<typename T>
 size_t Matrix<T>::row_count(
 
@@ -138,19 +76,82 @@ void Matrix<T>::swap(
     T* a,
     T* b
 ) {
-    T* temp = a;
+    for (int i = 0; i < row_count(); i++) {
+        T temp = a[i];
+        a[i] = b[i];
+        b[i] = temp;
+    }
+}
+
+template<typename T>
+void Matrix<T>::swap(
+    T& a,
+    T& b
+) {
+    T temp = a;
     a = b;
     b = temp;
 }
 
 template<typename T>
-void Matrix<T>::swap(
-    T a,
-    T b
+Matrix<T>::Matrix(
+    const Matrix<T>& other
 ) {
-    T temp = a;
-    a = b;
-    b = temp;
+    _row_cnt = other._row_cnt;
+    _col_cnt = other._col_cnt;
+
+    _mat = new T*[_row_cnt];
+    for (size_t i = 0; i < _row_cnt; i++) {
+        _mat[i] = new T[_col_cnt];
+        for (size_t j = 0; j < _col_cnt; j++) {
+            _mat[i][j] = other._mat[i][j];
+        }
+    }
+}
+
+template<typename T>
+Matrix<T>& Matrix<T>::operator=(
+    const Matrix<T>& other
+) {
+    if (this != &other) {
+        for (size_t i = 0; i < _row_cnt; i++) {
+            delete[] _mat[i];
+        }
+        delete[] _mat;
+
+        _row_cnt = other._row_cnt;
+        _col_cnt = other._col_cnt;
+        _mat = new T*[_row_cnt];
+        for (size_t i = 0; i < _row_cnt; i++) {
+            _mat[i] = new T[_col_cnt];
+            for (size_t j = 0; j < _col_cnt; j++) {
+                _mat[i][j] = other._mat[i][j];
+            }
+        }
+    }
+
+    return *this;
+}
+
+template<typename T>
+Matrix<T>::Matrix(
+    Matrix<T>&& other
+) : _row_cnt(other._row_cnt), _col_cnt(other._col_cnt), _mat(other._mat) {
+    other._mat = nullptr;
+}
+
+template<typename T>
+Matrix<T>& Matrix<T>::operator=(
+    Matrix<T>&& other
+) {
+    if (this != &other) {
+        _row_cnt = other._row_cnt;
+        _col_cnt = other._col_cnt;
+        _mat = other._mat;
+        other._mat = nullptr;
+    }
+
+    return *this;
 }
 
 template<typename T>
@@ -251,8 +252,7 @@ Vector<T> Matrix<T>::operator*(
     Vector<T> result(_row_cnt);
     for (int i = 0; i < _row_cnt; i++) {
         for (int j = 0; j < _col_cnt; j++) {
-            T* vec = vector.vec();
-            result[i] += _mat[i][j] * vec[j];
+            result[i] += _mat[i][j] * vector[j];
         }
     }
 
@@ -288,26 +288,12 @@ Matrix<T> Matrix<T>::operator/(
 }
 
 template<typename T>
-void Matrix<T>::transpose(
-
-) {
-    Matrix result(col_count(), row_count());
-    for (int i = 0; i < row_count(); i++) {
-        for (int j = 0; j < col_count(); j++) {
-            result[j][i] = mat()[i][j];
-        }
-    }
-    
-    *this = result;
-}
-
-template<typename T>
 Matrix<T> Matrix<T>::transposed(
     
 ) const {
-    Matrix result(col_count(), row_count());
-    for (int i = 0; i < row_count(); i++) {
-        for (int j = 0; j < col_count(); j++) {
+    Matrix result((int)col_count(), (int)row_count());
+    for (int i = 0; i < (int)row_count(); i++) {
+        for (int j = 0; j < (int)col_count(); j++) {
             result[j][i] = mat()[i][j];
         }
     }
@@ -315,19 +301,12 @@ Matrix<T> Matrix<T>::transposed(
     return result;
 }
 
-//template<typename T>
-//void Matrix<T>::inverse(
-//
-//) {
-//    ;
-//}
-//
-//template<typename T>
-//Matrix<T> Matrix<T>::inversed(
-//
-//) {
-//    return *this;
-//}
+template<typename T>
+void Matrix<T>::transpose(
+
+) {
+    *this = transposed();
+}
 
 template<typename T>
 double Matrix<T>::determinant(
@@ -337,11 +316,14 @@ double Matrix<T>::determinant(
         throw std::invalid_argument("Unmatching matrix size");
     }
 
+    int n = (int)row_count();
+
+    Matrix<T> copy(n, n);
+    copy.set_matrix(this->mat());
+
+    double det = 1.0;
+
     // TODO
-
-    int n = row_count();
-
-    double det = 1;
 
     return det;
 }
@@ -354,38 +336,56 @@ int Matrix<T>::rank(
         throw std::invalid_argument("Unmatching matrix size");
     }
 
-    // TODO
-
     int n = (int)row_count();
+
+    Matrix<T> copy(n, n);
+    copy.set_matrix(this->mat());
 
     int rank = n - 1;
 
-    return rank;
-}
+    for (int row = 0; row < rank; row++) {
+        if (copy[row][row]) {
+            for (int col = 0; col < n; col++) {
+                if (col != row) {
+                    T mult = copy[col][row] / copy[row][row];
+                    for (int i = 0; i < rank; i++)
+                    copy[col][i] -= mult * copy[row][i];
+                }
+            }
+        } else {
+            bool reduce = true;
 
-template<typename T>
-void Matrix<T>::to_up_diag(
+            for (int i = row + 1; i < n; i++) {
+                if (copy[i][row]) {
+                    copy.swap(copy[i], copy[rank]);
+                    reduce = false;
+                    break ;
+                }
+            }
 
-) {
-    int n = (int)row_count();
+            if (reduce) {
+                rank--;
 
-    for (int r = 0; r < n; r++) {
-        T diag = mat()[r][r];
-        for (int c = r + 1; c < n; c++) {
-            
+                for (int i = 0; i < n; i ++)
+                    copy[i][row] = copy[i][rank];
+            }
+
+            row--;
         }
     }
+
+    return rank;
 }
 
 template<typename T>
 bool Matrix<T>::is_diag_d(
 
 ) const {
-    for (int i = 0; i < row_count(); i++) {
+    for (int i = 0; i < (int)row_count(); i++) {
         T diag = std::abs(mat()[i][i]);
         
         T sum = 0;
-        for (size_t j = 0; j < col_count(); j++) {
+        for (int j = 0; j < (int)col_count(); j++) {
             if (i != j) {
                 sum += std::abs(mat()[i][j]);
             }

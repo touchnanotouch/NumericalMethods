@@ -17,6 +17,10 @@ int main() {
 
         std::cout << sole << std::endl;
 
+        Matrix<int> mat = sole.matrix();
+
+        std::cout << mat.rank() << std::endl;
+
         // Vector<int> test = sole.solve_si_method(10000, 1e-5);
 
         // std::cout << test << std::endl;

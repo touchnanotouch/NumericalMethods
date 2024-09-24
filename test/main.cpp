@@ -11,20 +11,13 @@
 
 int main() {
     try {
-        SoLE<int> sole(3, 3);
+        SoLE<double> sole(3, 3);
         sole.set_matrix("../data/matrix.txt");
         sole.set_vector("../data/vector.txt");
 
         std::cout << sole << std::endl;
 
-        Matrix<int> mat = sole.matrix();
-
-        std::cout << mat.rank() << std::endl;
-
-        // Vector<int> test = sole.solve_si_method(10000, 1e-5);
-
-        // std::cout << test << std::endl;
-        // std::cout << sole.is_solution(test) << std::endl;
+        std::cout << sole.solve_iter("seidel") << std::endl;
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
     }

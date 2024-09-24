@@ -11,7 +11,6 @@ class Matrix {
         size_t _row_cnt;
         size_t _col_cnt;
         T** _mat;
-
     public:
         Matrix(
             size_t row_count,
@@ -150,15 +149,19 @@ class Matrix {
 
         );
 
-        //void inverse(
+        Matrix cofactors(
 
-        //);
+        );
 
-        //Matrix inversed(
+        Matrix inversed(
 
-        //);
+        );
 
-        double determinant(
+        void inverse(
+
+        );
+
+        double det(
 
         ) const;
 

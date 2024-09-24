@@ -78,12 +78,12 @@ class SoLE {
             const SoLE& sole
         ) {
             out << sole._coeffs << std::endl;
-            out << sole._terms << std::endl;
+            out << sole._terms;
 
             return out;
         };
 
-        double determinant(
+        double det(
 
         );
 
@@ -95,7 +95,8 @@ class SoLE {
             Vector<T>& solution
         ) const;
 
-        Vector<T> solve_si_method(
+        Vector<T> solve_iter(
+            std::string method = "si",
             int iter_max = 1000,
             double epsilon = 1e-5
         ) const;

@@ -15,13 +15,22 @@ Vector<T> SoLE<T>::calc_next_x(
     Vector<T> x,
     std::string method
 ) const {
-    for (int i = 0; i < row_count(); i++) {
+    int n = (int)row_count();
+
+    for (int i = 0; i < n; i++) {
         T sum = 0;
         if (method == "si") {
-            for (int j = 0; j < row_count(); j++) {
+            for (int j = 0; j < n; j++) {
                 if (j != i) {
                     sum += matrix()[i][j] * x[j];
                 }
+            }
+        } else if (method == "seidel") {
+            for (int j = 0; j < i; j++) {
+                sum += matrix()[i][j] * x[j];
+            }
+            for (int j = i + 1; j < n; j++) {
+                sum += matrix()[i][j] * x[j];
             }
         }
 
@@ -150,10 +159,10 @@ void SoLE<T>::set_vector(
 }
 
 template<typename T>
-double SoLE<T>::determinant(
+double SoLE<T>::det(
 
 ) {
-    return matrix().determinant();
+    return matrix().det();
 }
 
 template<typename T>
@@ -171,14 +180,19 @@ bool SoLE<T>::is_solution(
 }
 
 template<typename T>
-Vector<T> SoLE<T>::solve_si_method(
+Vector<T> SoLE<T>::solve_iter(
+    std::string method,
     int iter_max,
     double epsilon
 ) const {
     Vector<T> x(row_count());
 
+    if (!matrix().is_diag_d()) {
+        throw std::runtime_error("Matrix isn't diagonal dominant");
+    }
+
     for (int i = 0; i < iter_max; i++) {
-        Vector<T> x_next = calc_next_x(x, "si");
+        Vector<T> x_next = calc_next_x(x, method);
 
         if ((x_next - x).norm() < epsilon) {
             break;
@@ -228,7 +242,20 @@ bool SoLE<T>::to_diag_d(
         }
     } while (std::next_permutation(indices, indices + n));
 
+    Matrix<T> E(n, n);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            if (i == j) {
+                E[i][j] = 1;
+            } else {
+                E[i][j] = 0;
+            }
+        }
+    }
 
+    Matrix<T> mat_new = matrix().inversed() * E;
+
+    set_matrix(mat_new);
 
     delete[] indices;
 

@@ -5,6 +5,7 @@ template class Matrix<int>;
 template class Matrix<float>;
 template class Matrix<double>;
 
+
 template<typename T>
 size_t Matrix<T>::row_count(
 
@@ -291,9 +292,13 @@ template<typename T>
 Matrix<T> Matrix<T>::transposed(
     
 ) const {
-    Matrix result((int)col_count(), (int)row_count());
-    for (int i = 0; i < (int)row_count(); i++) {
-        for (int j = 0; j < (int)col_count(); j++) {
+    int n = (int)row_count();
+    int m = (int)col_count();
+
+    Matrix result(n, m);
+
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
             result[j][i] = mat()[i][j];
         }
     }
@@ -309,23 +314,81 @@ void Matrix<T>::transpose(
 }
 
 template<typename T>
-double Matrix<T>::determinant(
+Matrix<T> Matrix<T>::cofactors(
 
-) const {
-    if (row_count() != col_count()) {
-        throw std::invalid_argument("Unmatching matrix size");
-    }
-
+) {
     int n = (int)row_count();
 
-    Matrix<T> copy(n, n);
-    copy.set_matrix(this->mat());
+    Matrix<T> cof(n, n);
 
-    double det = 1.0;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            Matrix<T> minor(n - 1, n - 1);
+            for (int k = 0; k < n; k++) {
+                for (int l = 0; l < n; l++) {
+                    if (k != i && l != j) {
+                        minor[k < i ? k : k - 1][l < j ? l : l - 1] = mat()[k][l];
+                    }
+                }
+            }
 
-    // TODO
+            cof[i][j] = pow(-1, i + j) * minor.det();
+        }
+    }
 
-    return det;
+    return cof.transposed();
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::inversed(
+
+) {
+    int n = (int)row_count();
+
+    double determ = det();
+
+    if (determ == 0) {
+        throw std::runtime_error("Матрица не обратима");
+    }
+
+    Matrix<T> cof = cofactors() / determ;
+
+    return cof;
+}
+
+template<typename T>
+void Matrix<T>::inverse(
+
+) {
+    *this = inversed();
+}
+
+template<typename T>
+double Matrix<T>::det(
+
+) const {
+    if (row_count() == 1) {
+        return mat()[0][0];
+    } else if (row_count() == 2) {
+        return mat()[0][0] * mat()[1][1] - mat()[0][1] * mat()[1][0];
+    } else {
+        double det = 0;
+        for (int i = 0; i < row_count(); i++) {
+            Matrix<T> minor(row_count() - 1, col_count() - 1);
+            for (int j = 1; j < row_count(); j++) {
+                for (int k = 0; k < col_count(); k++) {
+                    if (k < i) {
+                        minor[j - 1][k] = mat()[j][k];
+                    } else if (k > i) {
+                        minor[j - 1][k - 1] = mat()[j][k];
+                    }
+                }
+            }
+            det += (i % 2 == 0 ? 1 : -1) * mat()[0][i] * minor.det();
+        }
+
+        return det;
+    }
 }
 
 template<typename T>

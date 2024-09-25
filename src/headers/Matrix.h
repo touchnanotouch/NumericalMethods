@@ -11,6 +11,10 @@ class Matrix {
         size_t _row_cnt;
         size_t _col_cnt;
         T** _mat;
+
+        void elimination(
+
+        );
     public:
         Matrix(
             size_t row_count,
@@ -161,7 +165,7 @@ class Matrix {
 
         );
 
-        double det(
+        T det(
 
         ) const;
 
@@ -173,7 +177,7 @@ class Matrix {
 
         ) const;
 
-        bool to_diag_d(
+        void to_diag_d(
 
         );
 };

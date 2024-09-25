@@ -31,7 +31,7 @@ template<typename T>
 void Vector<T>::set_vector(
     T* vector
 ) {
-    for (int i = 0; i < _row_cnt; i++) {
+    for (size_t i = 0; i < _row_cnt; i++) {
         _vec[i] = vector[i];
     }
 }
@@ -53,7 +53,7 @@ Vector<T>::Vector(
     _row_cnt = other._row_cnt;
     _vec = new T[_row_cnt];
     for (size_t i = 0; i < _row_cnt; i++) {
-        _vec[i] = other._vec[i];
+        _vec[i] = other[i];
     }
 }
 
@@ -67,7 +67,7 @@ Vector<T>& Vector<T>::operator=(
         _row_cnt = other._row_cnt;
         _vec = new T[_row_cnt];
         for (size_t i = 0; i < _row_cnt; i++) {
-            _vec[i] = other._vec[i];
+            _vec[i] = other[i];
         }
     }
 
@@ -110,12 +110,12 @@ bool Vector<T>::operator==(
     const Vector& other
 ) const {
     if (_row_cnt != other._row_cnt) {
-        return false;
+        throw std::invalid_argument("Unmatching vector sizes");
     }
 
     const double eps = 1e-5;
     for (size_t i = 0; i < _row_cnt; i++) {
-        if (_vec[i] != other._vec[i]) {
+        if (_vec[i] != other[i]) {
             return false;
         }
     }
@@ -133,7 +133,7 @@ Vector<T> Vector<T>::operator+(
 
     Vector result(_row_cnt);
     for (size_t i = 0; i < _row_cnt; i++) {
-        result._vec[i] = _vec[i] + other._vec[i];
+        result[i] = _vec[i] + other[i];
     }
 
     return result;
@@ -149,7 +149,7 @@ Vector<T> Vector<T>::operator-(
 
     Vector result(_row_cnt);
     for (size_t i = 0; i < _row_cnt; i++) {
-        result._vec[i] = _vec[i] - other._vec[i];
+        result[i] = _vec[i] - other[i];
     }
 
     return result;
@@ -161,12 +161,11 @@ Vector<T> Vector<T>::operator*(
 ) const {
     Vector result(_row_cnt);
     for (size_t i = 0; i < _row_cnt; i++) {
-        result._vec[i] = _vec[i] * scalar;
+        result[i] = _vec[i] * scalar;
     }
 
     return result;
 }
-
 
 template<typename T>
 Vector<T> Vector<T>::operator/(
@@ -174,7 +173,7 @@ Vector<T> Vector<T>::operator/(
 ) const {
     Vector result(_row_cnt);
     for (size_t i = 0; i < _row_cnt; i++) {
-        result._vec[i] = _vec[i] / scalar;
+        result[i] = _vec[i] / scalar;
     }
 
     return result;
@@ -184,9 +183,13 @@ template<typename T>
 T Vector<T>::norm(
 
 ) const {
+    size_t n = row_count();
+
+    T* vec = this->vec();
+
     T result = 0;
-    for (size_t i = 0; i < row_count(); i++) {
-        result += std::abs(vec()[i]);
+    for (size_t i = 0; i < n; i++) {
+        result += std::abs(vec[i]);
     }
 
     return result;

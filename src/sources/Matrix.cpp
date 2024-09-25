@@ -1,3 +1,7 @@
+#include <cmath>
+
+#include <omp.h>
+
 #include "../headers/Matrix.h"
 
 
@@ -5,6 +9,31 @@ template class Matrix<int>;
 template class Matrix<float>;
 template class Matrix<double>;
 
+
+template<typename T>
+void Matrix<T>::elimination(
+) {
+    size_t n = row_count();
+
+    #pragma omp parallel for
+    for (size_t r = 0; r < n; r++) {
+        double diag_val = mat()[r][r];
+
+        for (size_t i = r + 1; i < n; i++) {
+            double factor = mat()[i][r] / diag_val;
+            for (size_t j = r; j < n; j++) {
+                mat()[i][j] -= mat()[r][j] * factor;
+            }
+        }
+
+        for (size_t j = r + 1; j < n; j++) {
+            double factor = mat()[j][r] / diag_val;
+            for (size_t k = r; k < n; k++) {
+                mat()[j][k] -= mat()[r][k] * factor;
+            }
+        }
+    }
+}
 
 template<typename T>
 size_t Matrix<T>::row_count(
@@ -46,7 +75,7 @@ void Matrix<T>::set_row(
     T* row,
     int index
 ) {
-    for (int i = 0; i < _row_cnt; i++) {
+    for (size_t i = 0; i < _row_cnt; i++) {
         _mat[index][i] = row[i];
     }
 }
@@ -56,7 +85,7 @@ void Matrix<T>::set_col(
     T* col,
     int index
 ) {
-    for (int i = 0; i < _col_cnt; i++) {
+    for (size_t i = 0; i < _col_cnt; i++) {
         _mat[i][index] = col[i];
     }
 }
@@ -65,8 +94,8 @@ template<typename T>
 void Matrix<T>::set_matrix(
     T** matrix
 ) {
-    for (int i = 0; i < _row_cnt; i++) {
-        for (int j = 0; j < _col_cnt; j++) {
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
             _mat[i][j] = matrix[i][j];
         }
     }
@@ -77,7 +106,7 @@ void Matrix<T>::swap(
     T* a,
     T* b
 ) {
-    for (int i = 0; i < row_count(); i++) {
+    for (size_t i = 0; i < _row_cnt; i++) {
         T temp = a[i];
         a[i] = b[i];
         b[i] = temp;
@@ -105,7 +134,7 @@ Matrix<T>::Matrix(
     for (size_t i = 0; i < _row_cnt; i++) {
         _mat[i] = new T[_col_cnt];
         for (size_t j = 0; j < _col_cnt; j++) {
-            _mat[i][j] = other._mat[i][j];
+            _mat[i][j] = other[i][j];
         }
     }
 }
@@ -126,7 +155,7 @@ Matrix<T>& Matrix<T>::operator=(
         for (size_t i = 0; i < _row_cnt; i++) {
             _mat[i] = new T[_col_cnt];
             for (size_t j = 0; j < _col_cnt; j++) {
-                _mat[i][j] = other._mat[i][j];
+                _mat[i][j] = other[i][j];
             }
         }
     }
@@ -175,9 +204,9 @@ bool Matrix<T>::operator==(
     }
 
     const double eps = 1e-5;
-    for (int i = 0; i < _row_cnt; i++) {
-        for (int j = 0; j < _col_cnt; j++) {
-            if (_mat[i][j] != other._mat[i][j] ) {
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
+            if (_mat[i][j] != other[i][j] ) {
                 return false;
             }
         }
@@ -195,9 +224,9 @@ Matrix<T> Matrix<T>::operator+(
     }
 
     Matrix result(_row_cnt, _col_cnt);
-    for (int i = 0; i < _row_cnt; i++) {
-        for (int j = 0; j < _col_cnt; j++) {
-            result._mat[i][j] = _mat[i][j] + other._mat[i][j];
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
+            result[i][j] = _mat[i][j] + other[i][j];
         }
     }
 
@@ -213,9 +242,9 @@ Matrix<T> Matrix<T>::operator-(
     }
 
     Matrix result(_row_cnt, _col_cnt);
-    for (int i = 0; i < _row_cnt; i++) {
-        for (int j = 0; j < _col_cnt; j++) {
-            result._mat[i][j] = _mat[i][j] - other._mat[i][j];
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
+            result[i][j] = _mat[i][j] - other[i][j];
         }
     }
 
@@ -231,10 +260,10 @@ Matrix<T> Matrix<T>::operator*(
     }
 
     Matrix result(_row_cnt, other._col_cnt);
-    for (int i = 0; i < _row_cnt; i++) {
-        for (int j = 0; j < other._col_cnt; j++) {
-            for (int k = 0; k < _col_cnt; k++) {
-                result._mat[i][j] += _mat[i][k] * other._mat[k][j];
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < other._col_cnt; j++) {
+            for (size_t k = 0; k < _col_cnt; k++) {
+                result[i][j] += _mat[i][k] * other[k][j];
             }
         }
     }
@@ -251,8 +280,8 @@ Vector<T> Matrix<T>::operator*(
     }
 
     Vector<T> result(_row_cnt);
-    for (int i = 0; i < _row_cnt; i++) {
-        for (int j = 0; j < _col_cnt; j++) {
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
             result[i] += _mat[i][j] * vector[j];
         }
     }
@@ -265,8 +294,8 @@ Matrix<T> Matrix<T>::operator*(
     const T& scalar
 ) const {
     Matrix result(_row_cnt, _col_cnt);
-    for (int i = 0; i < _row_cnt; i++) {
-        for (int j = 0; j < _col_cnt; j++) {
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
             result._mat[i][j] = _mat[i][j] * scalar;
         }
     }
@@ -279,8 +308,8 @@ Matrix<T> Matrix<T>::operator/(
     const T& scalar
 ) const {
     Matrix result(_row_cnt, _col_cnt);
-    for (int i = 0; i < _row_cnt; i++) {
-        for (int j = 0; j < _col_cnt; j++) {
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
             result._mat[i][j] = _mat[i][j] / scalar;
         }
     }
@@ -292,14 +321,15 @@ template<typename T>
 Matrix<T> Matrix<T>::transposed(
     
 ) const {
-    int n = (int)row_count();
-    int m = (int)col_count();
+    size_t n = row_count();
+    size_t m = col_count();
+
+    T** mat = this->mat();
 
     Matrix result(n, m);
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
-            result[j][i] = mat()[i][j];
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j < m; j++) {
+            result[j][i] = mat[i][j];
         }
     }
     
@@ -317,22 +347,25 @@ template<typename T>
 Matrix<T> Matrix<T>::cofactors(
 
 ) {
-    int n = (int)row_count();
+    size_t n = row_count();
+
+    T** mat = this->mat();
 
     Matrix<T> cof(n, n);
 
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
+    #pragma omp parallel for
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j < n; j++) {
             Matrix<T> minor(n - 1, n - 1);
-            for (int k = 0; k < n; k++) {
-                for (int l = 0; l < n; l++) {
+            for (size_t k = 0; k < n; k++) {
+                for (size_t l = 0; l < n; l++) {
                     if (k != i && l != j) {
-                        minor[k < i ? k : k - 1][l < j ? l : l - 1] = mat()[k][l];
+                        minor[k < i ? k : k - 1][l < j ? l : l - 1] = mat[k][l];
                     }
                 }
             }
 
-            cof[i][j] = pow(-1, i + j) * minor.det();
+            cof[i][j] = std::pow(-1, i + j) * minor.det();
         }
     }
 
@@ -343,12 +376,10 @@ template<typename T>
 Matrix<T> Matrix<T>::inversed(
 
 ) {
-    int n = (int)row_count();
-
     double determ = det();
 
     if (determ == 0) {
-        throw std::runtime_error("Матрица не обратима");
+        throw std::runtime_error("Singular matrix");
     }
 
     Matrix<T> cof = cofactors() / determ;
@@ -364,76 +395,48 @@ void Matrix<T>::inverse(
 }
 
 template<typename T>
-double Matrix<T>::det(
+T Matrix<T>::det(
 
 ) const {
-    if (row_count() == 1) {
-        return mat()[0][0];
-    } else if (row_count() == 2) {
-        return mat()[0][0] * mat()[1][1] - mat()[0][1] * mat()[1][0];
-    } else {
-        double det = 0;
-        for (int i = 0; i < row_count(); i++) {
-            Matrix<T> minor(row_count() - 1, col_count() - 1);
-            for (int j = 1; j < row_count(); j++) {
-                for (int k = 0; k < col_count(); k++) {
-                    if (k < i) {
-                        minor[j - 1][k] = mat()[j][k];
-                    } else if (k > i) {
-                        minor[j - 1][k - 1] = mat()[j][k];
-                    }
-                }
-            }
-            det += (i % 2 == 0 ? 1 : -1) * mat()[0][i] * minor.det();
-        }
-
-        return det;
-    }
-}
-
-template<typename T>
-int Matrix<T>::rank(
-
-) const {
-    if (row_count() != col_count()) {
-        throw std::invalid_argument("Unmatching matrix size");
-    }
-
-    int n = (int)row_count();
+    size_t n = row_count();
 
     Matrix<T> copy(n, n);
     copy.set_matrix(this->mat());
 
-    int rank = n - 1;
+    copy.elimination();
 
-    for (int row = 0; row < rank; row++) {
-        if (copy[row][row]) {
-            for (int col = 0; col < n; col++) {
-                if (col != row) {
-                    T mult = copy[col][row] / copy[row][row];
-                    for (int i = 0; i < rank; i++)
-                    copy[col][i] -= mult * copy[row][i];
-                }
+    T det = 1;
+    for (size_t i = 0; i < n; i++) {
+        det *= copy[i][i];
+    }
+
+    return det;
+}
+
+template<typename T>
+int Matrix<T>::rank(
+  
+) const {
+    size_t n = row_count();
+    size_t m = col_count();
+
+    Matrix<T> copy(n, m);
+    copy.set_matrix(this->mat());
+
+    copy.elimination();
+
+    int rank = 0;
+    for (size_t i = 0; i < n; i++) {
+        bool is_zero_row = true;
+        for (size_t j = 0; j < m; j++) {
+            if (std::abs(copy[i][j]) > 1e-10) {
+                is_zero_row = false;
+                break;
             }
-        } else {
-            bool reduce = true;
+        }
 
-            for (int i = row + 1; i < n; i++) {
-                if (copy[i][row]) {
-                    copy.swap(copy[i], copy[rank]);
-                    reduce = false;
-                    break ;
-                }
-            }
-
-            if (reduce) {
-                rank--;
-
-                for (int i = 0; i < n; i ++)
-                    copy[i][row] = copy[i][rank];
-            }
-
-            row--;
+        if (!is_zero_row) {
+            rank++;
         }
     }
 
@@ -444,13 +447,18 @@ template<typename T>
 bool Matrix<T>::is_diag_d(
 
 ) const {
-    for (int i = 0; i < (int)row_count(); i++) {
-        T diag = std::abs(mat()[i][i]);
+    size_t n = row_count();
+    size_t m = col_count();
+
+    T** mat = this->mat();
+
+    for (size_t i = 0; i < n; i++) {
+        T diag = std::abs(mat[i][i]);
         
         T sum = 0;
-        for (int j = 0; j < (int)col_count(); j++) {
+        for (size_t j = 0; j < m; j++) {
             if (i != j) {
-                sum += std::abs(mat()[i][j]);
+                sum += std::abs(mat[i][j]);
             }
         }
 
@@ -463,8 +471,17 @@ bool Matrix<T>::is_diag_d(
 }
 
 template<typename T>
-bool Matrix<T>::to_diag_d(
+void Matrix<T>::to_diag_d(
     
 ) {
-    return false;
+    size_t n = row_count();
+
+    Matrix<T> E(n, n);
+    for (size_t i = 0; i < n; i++) {
+        E[i][i] = 1;
+    }
+
+    Matrix<T> mat_new = inversed() * E;
+
+    set_matrix(mat_new.mat());
 }

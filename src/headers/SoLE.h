@@ -83,6 +83,10 @@ class SoLE {
             return out;
         };
 
+        Matrix<T> extended(
+            
+        );
+
         double det(
 
         );
@@ -91,17 +95,29 @@ class SoLE {
 
         );
 
+        bool is_compatible(
+
+        );
+
         bool is_solution(
             Vector<T>& solution
         ) const;
+
+        bool is_diag_d(
+
+        );
+
+        bool is_solvable(
+    
+        );
+
+        void to_diag_d(
+        
+        );
 
         Vector<T> solve_iter(
             std::string method = "si",
             int iter_max = 1000,
             double epsilon = 1e-5
         ) const;
-
-        bool to_diag_d(
-        
-        );
 };

@@ -1,7 +1,8 @@
-#include <algorithm>
 #include <string>
 #include <sstream>
 #include <fstream>
+
+#include <omp.h>
 
 #include "../headers/SoLE.h"
 
@@ -10,6 +11,7 @@ template class SoLE<int>;
 template class SoLE<float>;
 template class SoLE<double>;
 
+
 template<typename T>
 Vector<T> SoLE<T>::calc_next_x(
     Vector<T> x,
@@ -17,6 +19,7 @@ Vector<T> SoLE<T>::calc_next_x(
 ) const {
     int n = (int)row_count();
 
+    #pragma omp parallel for
     for (int i = 0; i < n; i++) {
         T sum = 0;
         if (method == "si") {
@@ -159,6 +162,27 @@ void SoLE<T>::set_vector(
 }
 
 template<typename T>
+Matrix<T> SoLE<T>::extended(
+    
+) {
+    size_t n = row_count();
+    size_t m = col_count();
+
+    // TODO : rework for loops so it doesn't look like unlogical shit
+
+    Matrix<T> result(n, m + 1);
+
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j < m; j++) {
+            result[i][j] = matrix()[i][j];
+        }
+        result[i][m] = vector()[i];
+    }
+
+    return result;
+}
+
+template<typename T>
 double SoLE<T>::det(
 
 ) {
@@ -173,10 +197,47 @@ int SoLE<T>::rank(
 }
 
 template<typename T>
+bool SoLE<T>::is_compatible(
+
+) {
+    return extended().rank() == matrix().rank();
+}
+
+template<typename T>
 bool SoLE<T>::is_solution(
     Vector<T>& solution
 ) const {
     return matrix() * solution == vector();
+}
+
+template<typename T>
+bool SoLE<T>::is_diag_d(
+
+) {
+    return matrix().is_diag_d();
+}
+
+template<typename T>
+bool SoLE<T>::is_solvable(
+    
+) {
+    return is_compatible() && is_diag_d();
+}
+
+template<typename T>
+void SoLE<T>::to_diag_d(
+
+) {
+    int n = (int)row_count();
+
+    Matrix<T> E(n, n);
+    for (int i = 0; i < n; i++) {
+        E[i][i] = 1;
+    }
+
+    Matrix<T> mat_new = matrix().inversed() * E;
+    
+    set_matrix(mat_new);
 }
 
 template<typename T>
@@ -187,78 +248,18 @@ Vector<T> SoLE<T>::solve_iter(
 ) const {
     Vector<T> x(row_count());
 
-    if (!matrix().is_diag_d()) {
-        throw std::runtime_error("Matrix isn't diagonal dominant");
-    }
-
     for (int i = 0; i < iter_max; i++) {
         Vector<T> x_next = calc_next_x(x, method);
 
         if ((x_next - x).norm() < epsilon) {
             break;
         }
+        // else {
+        //     std::cout << "iter " << i + 1 << ", norm: " << (x_next - x).norm() << std::endl;
+        // }
 
         x = x_next;
     }
 
     return x;
 }
-
-template<typename T>
-bool SoLE<T>::to_diag_d(
-
-) {
-    int min_s = -10;
-    int max_s = 10;
-    int size = max_s - min_s + 1;
-
-    size_t n = row_count();
-
-    int* indices = new int[n];
-    for (int i = 0; i < n; i++) {
-        indices[i] = i;
-    }
-
-    do {
-        Matrix<T> mat_new(n, n);
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                mat_new[i][j] = matrix()[indices[i]][j];
-            }
-        }
-
-        if (mat_new.is_diag_d()) {
-            Vector<T> vector_new(n);
-            for (int l = 0; l < n; l++) {
-                vector_new[l] = vector()[indices[l]];
-            }
-
-            set_matrix(mat_new);
-            set_vector(vector_new);
-
-            delete[] indices;
-
-            return true;
-        }
-    } while (std::next_permutation(indices, indices + n));
-
-    Matrix<T> E(n, n);
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            if (i == j) {
-                E[i][j] = 1;
-            } else {
-                E[i][j] = 0;
-            }
-        }
-    }
-
-    Matrix<T> mat_new = matrix().inversed() * E;
-
-    set_matrix(mat_new);
-
-    delete[] indices;
-
-    return false;
-}
-

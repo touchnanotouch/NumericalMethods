@@ -11,23 +11,33 @@
 
 int main() {
     try {
-        SoLE<double> sole(4, 4);
-        sole.set_matrix("../data/matrix_n4.txt");
-        sole.set_vector("../data/vector_n4.txt");
+        const int n = 10;
+
+        std::string m_path = "../data/matrix_n" + std::to_string(n) + ".txt";
+        std::string v_path = "../data/matrix_n" + std::to_string(n) + ".txt";
+
+        SoLE<double> sole(n, n);
+        sole.set_matrix(m_path);
+        sole.set_vector(v_path);
 
         if (!sole.is_compatible()) {
-            throw std::runtime_error("Matrix isn't compatible");
+           throw std::runtime_error("Matrix isn't compatible");
         } else {
-            if (!sole.is_diag_d()) {
-                sole.to_diag_d();
-            }
+           // to diag d is sloooowww (was)
 
-            if (!sole.is_solvable()) {
-                throw std::runtime_error("Matrix isn't solvable");
-            }
+           if (!sole.is_diag_d()) {
+               sole.to_diag_d();
+           }
+
+           if (!sole.is_diag_d()) {
+               throw std::runtime_error("Matrix isn't transformable to d/d form");
+           }
         }
 
-        std::cout << sole.solve_iter("seidel") << std::endl;
+        Vector<double> solution = sole.solve_iter("seidel");
+
+        std::cout << solution << std::endl;
+        std::cout << "is_solution: " << sole.is_solution(solution) << std::endl;
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
     }

@@ -15,6 +15,10 @@ class SoLE {
         Matrix<T> _coeffs;
         Vector<T> _terms;
 
+        void elimination(
+
+        );
+
         Vector<T> calc_next_x(
             Vector<T> x,
             std::string method
@@ -117,7 +121,7 @@ class SoLE {
 
         Vector<T> solve_iter(
             std::string method = "si",
-            int iter_max = 1000,
+            int iter_max = 100,
             double epsilon = 1e-5
         ) const;
 };

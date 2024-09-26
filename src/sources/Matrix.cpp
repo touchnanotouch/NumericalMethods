@@ -12,24 +12,26 @@ template class Matrix<double>;
 
 template<typename T>
 void Matrix<T>::elimination(
+
 ) {
     size_t n = row_count();
 
-    #pragma omp parallel for
-    for (size_t r = 0; r < n; r++) {
-        double diag_val = mat()[r][r];
+    T** mat = this->mat();
 
-        for (size_t i = r + 1; i < n; i++) {
-            double factor = mat()[i][r] / diag_val;
-            for (size_t j = r; j < n; j++) {
-                mat()[i][j] -= mat()[r][j] * factor;
-            }
+    #pragma omp parallel for
+    for (int k = 0; k < n; k++) {
+        T diag_val = mat[k][k];
+
+        for (int i = k + 1; i < n; i++) {
+            double mu = mat[i][k] / diag_val;
+            for (int j = 0; j < n; j++)
+                mat[i][j] -= mat[k][j] * mu;
         }
 
-        for (size_t j = r + 1; j < n; j++) {
-            double factor = mat()[j][r] / diag_val;
-            for (size_t k = r; k < n; k++) {
-                mat()[j][k] -= mat()[r][k] * factor;
+        for (int i = 0; i < k; i++) {
+            double mu = mat[i][k] / diag_val;
+            for (int j = 0; j < n; j++) {
+                mat[i][j] -= mat[k][j] * mu;
             }
         }
     }
@@ -203,7 +205,7 @@ bool Matrix<T>::operator==(
         return false;
     }
 
-    const double eps = 1e-5;
+    const double eps = 1e-10;
     for (size_t i = 0; i < _row_cnt; i++) {
         for (size_t j = 0; j < _col_cnt; j++) {
             if (_mat[i][j] != other[i][j] ) {
@@ -474,14 +476,16 @@ template<typename T>
 void Matrix<T>::to_diag_d(
     
 ) {
-    size_t n = row_count();
+    elimination();
+    
+    //size_t n = row_count();
 
-    Matrix<T> E(n, n);
-    for (size_t i = 0; i < n; i++) {
-        E[i][i] = 1;
-    }
+    //Matrix<T> E(n, n);
+    //for (size_t i = 0; i < n; i++) {
+    //    E[i][i] = 1;
+    //}
 
-    Matrix<T> mat_new = inversed() * E;
+    //Matrix<T> mat_new = inversed() * E;
 
-    set_matrix(mat_new.mat());
+    //set_matrix(mat_new.mat());
 }

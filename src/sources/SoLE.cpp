@@ -13,6 +13,44 @@ template class SoLE<double>;
 
 
 template<typename T>
+void SoLE<T>::elimination(
+
+) {
+    size_t n = row_count();
+
+    Matrix<T> mat_copy(n, n);
+    mat_copy.set_matrix(this->matrix().mat());
+
+    Vector<T> vec_copy(n);
+    vec_copy.set_vector(this->vector().vec());
+
+    #pragma omp parallel for
+    for (int k = 0; k < n; k++) {
+        T diag_val = mat_copy[k][k];
+
+        for (int i = k + 1; i < n; i++) {
+            double mu = mat_copy[i][k] / diag_val;
+            for (int j = 0; j < n; j++)
+                mat_copy[i][j] -= mat_copy[k][j] * mu;
+
+            vec_copy[i] -= vec_copy[k] * mu;
+        }
+
+        for (int i = 0; i < k; i++) {
+            double mu = mat_copy[i][k] / diag_val;
+            for (int j = 0; j < n; j++) {
+                mat_copy[i][j] -= mat_copy[k][j] * mu;
+            }
+
+            vec_copy[i] -= vec_copy[k] * mu;
+        }
+    }
+
+    set_matrix(mat_copy);
+    set_vector(vec_copy);
+}
+
+template<typename T>
 Vector<T> SoLE<T>::calc_next_x(
     Vector<T> x,
     std::string method
@@ -228,16 +266,18 @@ template<typename T>
 void SoLE<T>::to_diag_d(
 
 ) {
-    int n = (int)row_count();
+    elimination();
 
-    Matrix<T> E(n, n);
-    for (int i = 0; i < n; i++) {
-        E[i][i] = 1;
-    }
+    // int n = (int)row_count();
 
-    Matrix<T> mat_new = matrix().inversed() * E;
+    // Matrix<T> E(n, n);
+    // for (int i = 0; i < n; i++) {
+    //     E[i][i] = (T)1;
+    // }
+
+    // Matrix<T> mat_new = matrix().inversed() * E;
     
-    set_matrix(mat_new);
+    // set_matrix(mat_new);
 }
 
 template<typename T>
@@ -251,12 +291,15 @@ Vector<T> SoLE<T>::solve_iter(
     for (int i = 0; i < iter_max; i++) {
         Vector<T> x_next = calc_next_x(x, method);
 
-        if ((x_next - x).norm() < epsilon) {
+        double x_norm = (x_next - x).norm();
+
+        std::cout << "iter " << i + 1 << ", norm: " << x_norm << std::endl;
+
+        if (x_norm < epsilon) {
             break;
+        } else {
+
         }
-        // else {
-        //     std::cout << "iter " << i + 1 << ", norm: " << (x_next - x).norm() << std::endl;
-        // }
 
         x = x_next;
     }

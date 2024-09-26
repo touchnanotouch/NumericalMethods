@@ -98,7 +98,7 @@ class Vector {
             const T& scalar
         ) const;
 
-        T norm(
+        double norm(
             
         ) const;
 };

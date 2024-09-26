@@ -113,7 +113,7 @@ bool Vector<T>::operator==(
         throw std::invalid_argument("Unmatching vector sizes");
     }
 
-    const double eps = 1e-5;
+    const double eps = 1e-10;
     for (size_t i = 0; i < _row_cnt; i++) {
         if (_vec[i] != other[i]) {
             return false;
@@ -180,14 +180,14 @@ Vector<T> Vector<T>::operator/(
 }
 
 template<typename T>
-T Vector<T>::norm(
+double Vector<T>::norm(
 
 ) const {
     size_t n = row_count();
 
     T* vec = this->vec();
 
-    T result = 0;
+    double result = 0;
     for (size_t i = 0; i < n; i++) {
         result += std::abs(vec[i]);
     }

@@ -19,18 +19,18 @@ void Matrix<T>::elimination(
     T** mat = this->mat();
 
     #pragma omp parallel for
-    for (int k = 0; k < n; k++) {
+    for (size_t k = 0; k < n; k++) {
         T diag_val = mat[k][k];
 
-        for (int i = k + 1; i < n; i++) {
+        for (size_t i = k + 1; i < n; i++) {
             double mu = mat[i][k] / diag_val;
-            for (int j = 0; j < n; j++)
+            for (size_t j = 0; j < n; j++)
                 mat[i][j] -= mat[k][j] * mu;
         }
 
-        for (int i = 0; i < k; i++) {
+        for (size_t i = 0; i < k; i++) {
             double mu = mat[i][k] / diag_val;
-            for (int j = 0; j < n; j++) {
+            for (size_t j = 0; j < n; j++) {
                 mat[i][j] -= mat[k][j] * mu;
             }
         }

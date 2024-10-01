@@ -11,7 +11,7 @@
 
 int main() {
     try {
-        const int n = 10;
+        const int n = 3;
 
         std::string m_path = "../data/matrix_n" + std::to_string(n) + ".txt";
         std::string v_path = "../data/matrix_n" + std::to_string(n) + ".txt";
@@ -23,8 +23,6 @@ int main() {
         if (!sole.is_compatible()) {
            throw std::runtime_error("Matrix isn't compatible");
         } else {
-           // to diag d is sloooowww (was)
-
            if (!sole.is_diag_d()) {
                sole.to_diag_d();
            }

@@ -25,20 +25,20 @@ void SoLE<T>::elimination(
     vec_copy.set_vector(this->vector().vec());
 
     #pragma omp parallel for
-    for (int k = 0; k < n; k++) {
+    for (size_t k = 0; k < n; k++) {
         T diag_val = mat_copy[k][k];
 
-        for (int i = k + 1; i < n; i++) {
+        for (size_t i = k + 1; i < n; i++) {
             double mu = mat_copy[i][k] / diag_val;
-            for (int j = 0; j < n; j++)
+            for (size_t j = 0; j < n; j++)
                 mat_copy[i][j] -= mat_copy[k][j] * mu;
 
             vec_copy[i] -= vec_copy[k] * mu;
         }
 
-        for (int i = 0; i < k; i++) {
+        for (size_t i = 0; i < k; i++) {
             double mu = mat_copy[i][k] / diag_val;
-            for (int j = 0; j < n; j++) {
+            for (size_t j = 0; j < n; j++) {
                 mat_copy[i][j] -= mat_copy[k][j] * mu;
             }
 
@@ -55,22 +55,22 @@ Vector<T> SoLE<T>::calc_next_x(
     Vector<T> x,
     std::string method
 ) const {
-    int n = (int)row_count();
+    size_t n = row_count();
 
     #pragma omp parallel for
-    for (int i = 0; i < n; i++) {
+    for (size_t i = 0; i < n; i++) {
         T sum = 0;
         if (method == "si") {
-            for (int j = 0; j < n; j++) {
+            for (size_t j = 0; j < n; j++) {
                 if (j != i) {
                     sum += matrix()[i][j] * x[j];
                 }
             }
         } else if (method == "seidel") {
-            for (int j = 0; j < i; j++) {
+            for (size_t j = 0; j < i; j++) {
                 sum += matrix()[i][j] * x[j];
             }
-            for (int j = i + 1; j < n; j++) {
+            for (size_t j = i + 1; j < n; j++) {
                 sum += matrix()[i][j] * x[j];
             }
         }
@@ -140,14 +140,14 @@ void SoLE<T>::set_matrix(
     std::ifstream file(file_path);
     std::string line;
 
-    for (int i = 0; i < row_count(); i++) {
+    for (size_t i = 0; i < row_count(); i++) {
         std::getline(file, line);
         std::istringstream stream(line);
         T value;
 
         Vector<T> row(col_count());
 
-        for (int j = 0; j < col_count(); j++) {
+        for (size_t j = 0; j < col_count(); j++) {
             stream >> value;
             row[j] = value;
             if (stream.peek() == delimiter) {
@@ -175,17 +175,20 @@ void SoLE<T>::set_vector(
     std::string file_path,
     const char delimiter
 ) {
-    Vector<T> result(row_count());
+    size_t n = row_count();
+    size_t m = col_count();
+
+    Vector<T> result(n);
 
     std::ifstream file(file_path);
     std::string line;
 
-    for (int i = 0; i < row_count(); i++) {
+    for (size_t i = 0; i < n; i++) {
         std::getline(file, line);
         std::istringstream stream(line);
         T value;
     
-        for (int j = 0; j < col_count(); j++) {
+        for (size_t j = 0; j < m; j++) {
             stream >> value;
             result[j] = value;
             if (stream.peek() == delimiter) {
@@ -205,8 +208,6 @@ Matrix<T> SoLE<T>::extended(
 ) {
     size_t n = row_count();
     size_t m = col_count();
-
-    // TODO : rework for loops so it doesn't look like unlogical shit
 
     Matrix<T> result(n, m + 1);
 
@@ -268,10 +269,10 @@ void SoLE<T>::to_diag_d(
 ) {
     elimination();
 
-    // int n = (int)row_count();
+    // size_t n = row_count();
 
     // Matrix<T> E(n, n);
-    // for (int i = 0; i < n; i++) {
+    // for (size_t i = 0; i < n; i++) {
     //     E[i][i] = (T)1;
     // }
 
@@ -297,6 +298,8 @@ Vector<T> SoLE<T>::solve_iter(
 
         if (x_norm < epsilon) {
             break;
+        } else {
+
         }
 
         x = x_next;

@@ -297,8 +297,6 @@ Vector<T> SoLE<T>::solve_iter(
 
         if (x_norm < epsilon) {
             break;
-        } else {
-
         }
 
         x = x_next;

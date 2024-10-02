@@ -124,4 +124,8 @@ class SoLE {
             int iter_max = 100,
             double epsilon = 1e-5
         ) const;
+
+        Vector<T> solve(
+            std::string method
+        ) const;
 };

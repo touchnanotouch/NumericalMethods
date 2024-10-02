@@ -57,25 +57,28 @@ Vector<T> SoLE<T>::calc_next_x(
 ) const {
     size_t n = row_count();
 
+    Matrix<T> matr = matrix();
+    Vector<T> vect = vector();
+
     #pragma omp parallel for
     for (size_t i = 0; i < n; i++) {
         T sum = 0;
         if (method == "si") {
             for (size_t j = 0; j < n; j++) {
                 if (j != i) {
-                    sum += matrix()[i][j] * x[j];
+                    sum += matr[i][j] * x[j];
                 }
             }
         } else if (method == "seidel") {
             for (size_t j = 0; j < i; j++) {
-                sum += matrix()[i][j] * x[j];
+                sum += matr[i][j] * x[j];
             }
             for (size_t j = i + 1; j < n; j++) {
-                sum += matrix()[i][j] * x[j];
+                sum += matr[i][j] * x[j];
             }
         }
 
-        x[i] = (vector()[i] - sum) / matrix()[i][i];
+        x[i] = (vect[i] - sum) / matr[i][i];
     }
 
     return x;
@@ -135,19 +138,22 @@ void SoLE<T>::set_matrix(
     std::string file_path,
     const char delimiter
 ) {
-    Matrix<T> result(row_count(), col_count());
+    size_t n = row_count();
+    size_t m = col_count();
+
+    Matrix<T> result(n, m);
 
     std::ifstream file(file_path);
     std::string line;
 
-    for (size_t i = 0; i < row_count(); i++) {
+    for (size_t i = 0; i < n; i++) {
         std::getline(file, line);
         std::istringstream stream(line);
         T value;
 
-        Vector<T> row(col_count());
+        Vector<T> row(m);
 
-        for (size_t j = 0; j < col_count(); j++) {
+        for (size_t j = 0; j < m; j++) {
             stream >> value;
             row[j] = value;
             if (stream.peek() == delimiter) {
@@ -209,13 +215,16 @@ Matrix<T> SoLE<T>::extended(
     size_t n = row_count();
     size_t m = col_count();
 
+    Matrix<T> matr = matrix();
+    Vector<T> vect = vector();
+
     Matrix<T> result(n, m + 1);
 
     for (size_t i = 0; i < n; i++) {
         for (size_t j = 0; j < m; j++) {
-            result[i][j] = matrix()[i][j];
+            result[i][j] = matr[i][j];
         }
-        result[i][m] = vector()[i];
+        result[i][m] = vect[i];
     }
 
     return result;
@@ -246,6 +255,8 @@ template<typename T>
 bool SoLE<T>::is_solution(
     Vector<T>& solution
 ) const {
+    // TODO : review and remake it
+
     return matrix() * solution == vector();
 }
 
@@ -260,6 +271,8 @@ template<typename T>
 bool SoLE<T>::is_solvable(
     
 ) {
+    // TODO : review and remake it
+
     return is_compatible() && is_diag_d();
 }
 
@@ -298,11 +311,44 @@ Vector<T> SoLE<T>::solve_iter(
 
         if (x_norm < epsilon) {
             break;
-        } else {
-
         }
 
         x = x_next;
+    }
+
+    return x;
+}
+
+template<typename T>
+Vector<T> SoLE<T>::solve(
+    std::string method
+) const {
+    size_t n = row_count();
+
+    Matrix<T> matr = matrix();
+    Vector<T> vect = vector();
+
+    Vector<T> x(n);
+
+    if (method == "thomas") {
+        Vector<T> P(n);
+        Vector<T> Q(n);
+
+        P[0] = -matr[0][1] / matr[0][0];
+        Q[0] = vect[0] / matr[0][0];
+
+        for (size_t i = 1; i < n; i++) {
+            P[i] = -matr[i][i + 1] / (matr[i][i] + matr[i][i - 1] * P[i - 1]);
+            Q[i] = (vect[i] - matr[i][i - 1] * Q[i - 1]) / (matr[i][i] + matr[i][i - 1] * P[i - 1]);
+        }
+
+        x[n - 1] = Q[n - 1];
+
+        for (size_t i = n - 1; i > 0; i--) {
+            x[i - 1] = P[i - 1] * x[i] + Q[i - 1];
+        }
+    } else {
+        // another non-iterative methods
     }
 
     return x;

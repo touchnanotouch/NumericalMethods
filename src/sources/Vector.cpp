@@ -113,7 +113,7 @@ bool Vector<T>::operator==(
         throw std::invalid_argument("Unmatching vector sizes");
     }
 
-    const double eps = 1e-10;
+    // const double eps = 1e-10;
     for (size_t i = 0; i < _row_cnt; i++) {
         if (_vec[i] != other[i]) {
             return false;

@@ -3,15 +3,12 @@
 #include <sstream>
 #include <fstream>
 
-#include "../headers/Matrix.h"
-#include "../headers/Vector.h"
-
 #include "../headers/SoLE.h"
 
 
 int main() {
     try {
-        const int n = 3;
+        const int n = 4;
 
         std::string m_path = "../data/matrix_n" + std::to_string(n) + ".txt";
         std::string v_path = "../data/vector_n" + std::to_string(n) + ".txt";
@@ -20,22 +17,26 @@ int main() {
         sole.set_matrix(m_path);
         sole.set_vector(v_path);
 
-        if (!sole.is_compatible()) {
-           throw std::runtime_error("Matrix isn't compatible");
-        } else {
-           if (!sole.is_diag_d()) {
-               sole.to_diag_d();
-           }
+        std::cout << sole << std::endl;
 
-           if (!sole.is_diag_d()) {
-               throw std::runtime_error("Matrix isn't transformable to d/d form");
-           }
-        }
+        Vector<double> solution = sole.solve("thomas");
 
-        Vector<double> solution = sole.solve_iter("seidel");
+        // if (!sole.is_compatible()) {
+        //    throw std::runtime_error("Matrix isn't compatible");
+        // } else {
+        //    if (!sole.is_diag_d()) {
+        //        sole.to_diag_d();
+        //    }
+
+        //    if (!sole.is_diag_d()) {
+        //        throw std::runtime_error("Matrix isn't transformable to d/d form");
+        //    }
+        // }
+
+        // Vector<double> solution = sole.solve_iter("seidel");
 
         std::cout << solution << std::endl;
-        std::cout << "is_solution: " << sole.is_solution(solution) << std::endl;
+        std::cout << "is_solution (sometimes unstable): " << sole.is_solution(solution) << std::endl;
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
     }

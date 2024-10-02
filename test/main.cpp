@@ -14,7 +14,7 @@ int main() {
         const int n = 3;
 
         std::string m_path = "../data/matrix_n" + std::to_string(n) + ".txt";
-        std::string v_path = "../data/matrix_n" + std::to_string(n) + ".txt";
+        std::string v_path = "../data/vector_n" + std::to_string(n) + ".txt";
 
         SoLE<double> sole(n, n);
         sole.set_matrix(m_path);

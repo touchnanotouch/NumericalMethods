@@ -1,7 +1,5 @@
 #include <iostream>
 #include <string>
-#include <sstream>
-#include <fstream>
 
 #include "../headers/SoLE.h"
 
@@ -19,7 +17,7 @@ int main() {
 
         std::cout << sole << std::endl;
 
-        Vector<double> solution = sole.solve("thomas");
+        Vector<double> solution = sole.solve("lu");
 
         // if (!sole.is_compatible()) {
         //    throw std::runtime_error("Matrix isn't compatible");
@@ -32,11 +30,10 @@ int main() {
         //        throw std::runtime_error("Matrix isn't transformable to d/d form");
         //    }
         // }
-
         // Vector<double> solution = sole.solve_iter("seidel");
 
         std::cout << solution << std::endl;
-        std::cout << "is_solution (sometimes unstable): " << sole.is_solution(solution) << std::endl;
+        std::cout << "is_solution: " << sole.is_solution(solution) << std::endl;
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
     }

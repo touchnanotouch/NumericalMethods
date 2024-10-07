@@ -205,10 +205,12 @@ bool Matrix<T>::operator==(
         return false;
     }
 
-    // const double eps = 1e-10;
+    const double eps = 1e-10;
     for (size_t i = 0; i < _row_cnt; i++) {
         for (size_t j = 0; j < _col_cnt; j++) {
-            if (_mat[i][j] != other[i][j] ) {
+            // i don't know what i'm doing
+
+            if (_mat[i][j] != other[i][j] && std::abs(_mat[i][j] - other[i][j]) > eps) {
                 return false;
             }
         }

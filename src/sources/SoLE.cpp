@@ -255,8 +255,6 @@ template<typename T>
 bool SoLE<T>::is_solution(
     Vector<T>& solution
 ) const {
-    // TODO : review and remake it
-
     return matrix() * solution == vector();
 }
 
@@ -271,7 +269,7 @@ template<typename T>
 bool SoLE<T>::is_solvable(
     
 ) {
-    // TODO : review and remake it
+    // TODO : review and remake it (done?)
 
     return is_compatible() && is_diag_d();
 }
@@ -347,8 +345,44 @@ Vector<T> SoLE<T>::solve(
         for (size_t i = n - 1; i > 0; i--) {
             x[i - 1] = P[i - 1] * x[i] + Q[i - 1];
         }
-    } else {
-        // another non-iterative methods
+    } else if (method == "lu") {
+        Matrix<T> L(n, n);
+        Matrix<T> U(n, n);
+
+        Vector<T> y(n);
+
+        for (int k = 0; k < n; k++) {
+            U[k][k] = matr[k][k];
+
+            for (int i = k + 1; i < n; i++) {
+                L[i][k] = matr[i][k] / U[k][k];
+                U[k][i] = matr[k][i];
+            }
+            
+            for (int i = k + 1; i < n; i++) {
+                for(int j = k + 1; j < n; j++) {
+                    matr[i][j] = matr[i][j] - L[i][k] * U[k][j];
+                }
+            }
+        }
+
+        for (int i = 0; i < n; i++) {
+            y[i] = vect[i];
+
+            for (int j = 0; j < i; j++) {
+                y[i] -= L[i][j] * y[j];
+            }
+        }
+
+        for (int i = n - 1; i >= 0; i--) {
+            x[i] = y[i];
+
+            for (int j = i + 1; j < n; j++) {
+                x[i] -= U[i][j] * x[j];
+            }
+
+            x[i] /= U[i][i];
+        }
     }
 
     return x;

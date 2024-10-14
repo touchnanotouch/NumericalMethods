@@ -24,12 +24,14 @@ void Matrix<T>::elimination(
 
         for (size_t i = k + 1; i < n; i++) {
             double mu = mat[i][k] / diag_val;
+
             for (size_t j = 0; j < n; j++)
                 mat[i][j] -= mat[k][j] * mu;
         }
 
         for (size_t i = 0; i < k; i++) {
             double mu = mat[i][k] / diag_val;
+
             for (size_t j = 0; j < n; j++) {
                 mat[i][j] -= mat[k][j] * mu;
             }
@@ -205,7 +207,7 @@ bool Matrix<T>::operator==(
         return false;
     }
 
-    const double eps = 1e-10;
+    const double eps = 1e-5;
     for (size_t i = 0; i < _row_cnt; i++) {
         for (size_t j = 0; j < _col_cnt; j++) {
             // i don't know what i'm doing
@@ -238,6 +240,21 @@ Matrix<T> Matrix<T>::operator+(
 }
 
 template<typename T>
+Matrix<T> Matrix<T>::operator+(
+    const T& scalar
+) const {
+    Matrix result(_row_cnt, _col_cnt);
+
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
+            result[i][j] = _mat[i][j] + scalar;
+        }
+    }
+
+    return result;
+}
+
+template<typename T>
 Matrix<T> Matrix<T>::operator-(
     const Matrix& other
 ) const {
@@ -249,6 +266,21 @@ Matrix<T> Matrix<T>::operator-(
     for (size_t i = 0; i < _row_cnt; i++) {
         for (size_t j = 0; j < _col_cnt; j++) {
             result[i][j] = _mat[i][j] - other[i][j];
+        }
+    }
+
+    return result;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::operator-(
+    const T& scalar
+) const {
+    Matrix result(_row_cnt, _col_cnt);
+
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
+            result[i][j] = _mat[i][j] - scalar;
         }
     }
 
@@ -361,6 +393,7 @@ Matrix<T> Matrix<T>::cofactors(
     for (size_t i = 0; i < n; i++) {
         for (size_t j = 0; j < n; j++) {
             Matrix<T> minor(n - 1, n - 1);
+
             for (size_t k = 0; k < n; k++) {
                 for (size_t l = 0; l < n; l++) {
                     if (k != i && l != j) {
@@ -399,7 +432,7 @@ void Matrix<T>::inverse(
 }
 
 template<typename T>
-T Matrix<T>::det(
+double Matrix<T>::det(
 
 ) const {
     size_t n = row_count();
@@ -409,7 +442,7 @@ T Matrix<T>::det(
 
     copy.elimination();
 
-    T det = 1;
+    double det = 1;
     for (size_t i = 0; i < n; i++) {
         det *= copy[i][i];
     }
@@ -432,6 +465,7 @@ int Matrix<T>::rank(
     int rank = 0;
     for (size_t i = 0; i < n; i++) {
         bool is_zero_row = true;
+
         for (size_t j = 0; j < m; j++) {
             if (std::abs(copy[i][j]) > 1e-10) {
                 is_zero_row = false;

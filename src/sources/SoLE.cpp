@@ -30,6 +30,7 @@ void SoLE<T>::elimination(
 
         for (size_t i = k + 1; i < n; i++) {
             double mu = mat_copy[i][k] / diag_val;
+
             for (size_t j = 0; j < n; j++)
                 mat_copy[i][j] -= mat_copy[k][j] * mu;
 
@@ -38,6 +39,7 @@ void SoLE<T>::elimination(
 
         for (size_t i = 0; i < k; i++) {
             double mu = mat_copy[i][k] / diag_val;
+
             for (size_t j = 0; j < n; j++) {
                 mat_copy[i][j] -= mat_copy[k][j] * mu;
             }
@@ -53,32 +55,94 @@ void SoLE<T>::elimination(
 template<typename T>
 Vector<T> SoLE<T>::calc_next_x(
     Vector<T> x,
-    std::string method
+    std::string method,
+    double res_omega,
+    int grad_iter
 ) const {
     size_t n = row_count();
 
     Matrix<T> matr = matrix();
     Vector<T> vect = vector();
 
+    int mtd = 0;
+    
+    if (method == "si") {
+        mtd = 1;
+    } else if (method == "seidel") {
+        mtd = 2;
+    } else if (method == "sor") {
+        mtd = 3;
+    } else if (method == "res") {
+        mtd = 4;
+    } else if (method == "grad") {
+        mtd = 5;
+    }
+
     #pragma omp parallel for
     for (size_t i = 0; i < n; i++) {
         T sum = 0;
-        if (method == "si") {
-            for (size_t j = 0; j < n; j++) {
-                if (j != i) {
+ 
+        switch (mtd) {
+            case 1: {
+                for (size_t j = 0; j < n; j++) {
+                    if (j != i) {
+                        sum += matr[i][j] * x[j];
+                    }
+                }
+
+                x[i] = (vect[i] - sum) / matr[i][i];
+
+                break;
+            }
+            case 2: {
+                for (size_t j = 0; j < i; j++) {
                     sum += matr[i][j] * x[j];
                 }
+
+                for (size_t j = i + 1; j < n; j++) {
+                    sum += matr[i][j] * x[j];
+                }
+
+                x[i] = (vect[i] - sum) / matr[i][i];
+
+                break;
             }
-        } else if (method == "seidel") {
-            for (size_t j = 0; j < i; j++) {
-                sum += matr[i][j] * x[j];
+            case 3: {
+                for (size_t j = 0; j < i; j++) {
+                    sum += matr[i][j] * x[j];
+                }
+
+                for (size_t j = i + 1; j < n; j++) {
+                    sum += matr[i][j] * x[j];
+                }
+
+                x[i] = (1 - res_omega) * x[i] + res_omega * (vect[i] - sum) / matr[i][i];
+
+                break;
             }
-            for (size_t j = i + 1; j < n; j++) {
-                sum += matr[i][j] * x[j];
+            case 4: {
+                Vector<T> r = vect - matr * x;
+
+                double alpha = (r.dot(r)) / (matr * r).dot(matr * r);
+
+                x[i] = x[i] + alpha * r[i];
+
+                break;
+            }
+            case 5: {
+                for (int j = 0; j < grad_iter; j++) {
+                    Vector<T> grad = vect - matr * x;
+
+                    double alpha = 1 / (1 + grad.norm());
+
+                    for (size_t k = 0; k < n; k++) {
+                        x[k] = x[k] + alpha * grad[k];
+                    }
+                }
+
+                break;
             }
         }
-
-        x[i] = (vect[i] - sum) / matr[i][i];
     }
 
     return x;
@@ -156,6 +220,7 @@ void SoLE<T>::set_matrix(
         for (size_t j = 0; j < m; j++) {
             stream >> value;
             row[j] = value;
+
             if (stream.peek() == delimiter) {
                 stream.ignore();
             }
@@ -197,6 +262,7 @@ void SoLE<T>::set_vector(
         for (size_t j = 0; j < m; j++) {
             stream >> value;
             result[j] = value;
+
             if (stream.peek() == delimiter) {
                 stream.ignore();
             }
@@ -211,7 +277,7 @@ void SoLE<T>::set_vector(
 template<typename T>
 Matrix<T> SoLE<T>::extended(
     
-) {
+) const {
     size_t n = row_count();
     size_t m = col_count();
 
@@ -224,6 +290,7 @@ Matrix<T> SoLE<T>::extended(
         for (size_t j = 0; j < m; j++) {
             result[i][j] = matr[i][j];
         }
+
         result[i][m] = vect[i];
     }
 
@@ -269,7 +336,7 @@ template<typename T>
 bool SoLE<T>::is_solvable(
     
 ) {
-    // TODO : review and remake it (done?)
+    // TODO : review and remake it (need new concept)
 
     return is_compatible() && is_diag_d();
 }
@@ -296,18 +363,21 @@ template<typename T>
 Vector<T> SoLE<T>::solve_iter(
     std::string method,
     int iter_max,
-    double epsilon
+    double epsilon,
+    double res_omega,
+    int grad_iter
 ) const {
     Vector<T> x(row_count());
 
     for (int i = 0; i < iter_max; i++) {
-        Vector<T> x_next = calc_next_x(x, method);
+        Vector<T> x_next = calc_next_x(x, method, res_omega, grad_iter);
 
         double x_norm = (x_next - x).norm();
 
-        std::cout << "iter " << i + 1 << ", norm: " << x_norm << std::endl;
+        // std::cout << "iter " << i + 1 << ", norm: " << x_norm << std::endl;
 
         if (x_norm < epsilon) {
+            // std::cout << std::endl;
             break;
         }
 
@@ -372,6 +442,48 @@ Vector<T> SoLE<T>::solve(
             for (int j = 0; j < i; j++) {
                 y[i] -= L[i][j] * y[j];
             }
+        }
+
+        for (int i = n - 1; i >= 0; i--) {
+            x[i] = y[i];
+
+            for (int j = i + 1; j < n; j++) {
+                x[i] -= U[i][j] * x[j];
+            }
+
+            x[i] /= U[i][i];
+        }
+    } else if (method == "qroots") {
+        Matrix<T> L(n, n);
+
+        Vector<T> y(n);
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j <= i; j++) {
+                T sum = 0;
+
+                for (int k = 0; k < j; k++) {
+                    sum += L[i][k] * L[j][k];
+                }
+
+                if (i == j) {
+                    L[i][j] = std::sqrt(matr[i][i] - sum);
+                } else {
+                    L[i][j] = (matr[i][j] - sum) / L[j][j];
+                }
+            }
+        }
+
+        Matrix<T> U = L.transposed();
+
+        for (int i = 0; i < n; i++) {
+            y[i] = vect[i];
+
+            for (int j = 0; j < i; j++) {
+                y[i] -= L[i][j] * y[j];
+            }
+
+            y[i] /= L[i][i];
         }
 
         for (int i = n - 1; i >= 0; i--) {

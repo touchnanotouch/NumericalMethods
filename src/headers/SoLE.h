@@ -21,7 +21,9 @@ class SoLE {
 
         Vector<T> calc_next_x(
             Vector<T> x,
-            std::string method
+            std::string method,
+            double res_omega,
+            int grad_iter
         ) const;
     public:
         SoLE(
@@ -89,7 +91,7 @@ class SoLE {
 
         Matrix<T> extended(
             
-        );
+        ) const;
 
         double det(
 
@@ -122,7 +124,9 @@ class SoLE {
         Vector<T> solve_iter(
             std::string method = "si",
             int iter_max = 100,
-            double epsilon = 1e-5
+            double epsilon = 1e-5,
+            double res_omega = 1.0,
+            int grad_iter = 1000
         ) const;
 
         Vector<T> solve(

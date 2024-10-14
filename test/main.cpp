@@ -6,7 +6,7 @@
 
 int main() {
     try {
-        const int n = 4;
+        const int n = 3;
 
         std::string m_path = "../data/matrix_n" + std::to_string(n) + ".txt";
         std::string v_path = "../data/vector_n" + std::to_string(n) + ".txt";
@@ -17,23 +17,29 @@ int main() {
 
         std::cout << sole << std::endl;
 
-        Vector<double> solution = sole.solve("lu");
+        Vector<double> thomas_sol = sole.solve("thomas");
+        Vector<double> lu_sol = sole.solve("lu");
+        Vector<double> qroots_sol = sole.solve("qroots");
+        
+        Vector<double> si_sol = sole.solve_iter("si");
+        Vector<double> seidel_sol = sole.solve_iter("seidel");
+        Vector<double> sor_sol = sole.solve_iter("sor");
+        Vector<double> res_sol = sole.solve_iter("res");
+        Vector<double> grad_sol = sole.solve_iter("grad");
 
-        // if (!sole.is_compatible()) {
-        //    throw std::runtime_error("Matrix isn't compatible");
-        // } else {
-        //    if (!sole.is_diag_d()) {
-        //        sole.to_diag_d();
-        //    }
+        std::cout << "Exact methods\n" << std::endl;
+        
+        std::cout << "thomas: " << thomas_sol;
+        std::cout << "lu: " << lu_sol;
+        std::cout << "qroots: " << qroots_sol << std::endl;
 
-        //    if (!sole.is_diag_d()) {
-        //        throw std::runtime_error("Matrix isn't transformable to d/d form");
-        //    }
-        // }
-        // Vector<double> solution = sole.solve_iter("seidel");
+        std::cout << "Iterative methods\n" << std::endl;
 
-        std::cout << solution << std::endl;
-        std::cout << "is_solution: " << sole.is_solution(solution) << std::endl;
+        std::cout << "si: " << si_sol;
+        std::cout << "seidel: " << seidel_sol;
+        std::cout << "sor: " << sor_sol;
+        std::cout << "res: " << res_sol;
+        std::cout << "grad: " << grad_sol;
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
     }

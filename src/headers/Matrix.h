@@ -125,8 +125,16 @@ class Matrix {
             const Matrix& other
         ) const;
 
+        Matrix operator+(
+            const T& scalar
+        ) const;
+
         Matrix operator-(
             const Matrix& other
+        ) const;
+
+        Matrix operator-(
+            const T& scalar
         ) const;
 
         Matrix operator*(
@@ -165,7 +173,7 @@ class Matrix {
 
         );
 
-        T det(
+        double det(
 
         ) const;
 

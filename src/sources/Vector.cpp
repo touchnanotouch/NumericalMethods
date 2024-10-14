@@ -113,7 +113,7 @@ bool Vector<T>::operator==(
         throw std::invalid_argument("Unmatching vector sizes");
     }
 
-    const double eps = 1e-10;
+    const double eps = 1e-2;
     for (size_t i = 0; i < _row_cnt; i++) {
         if (_vec[i] != other[i] && std::abs(_vec[i] - other[i]) > eps) {
             return false;
@@ -140,6 +140,18 @@ Vector<T> Vector<T>::operator+(
 }
 
 template<typename T>
+Vector<T> Vector<T>::operator+(
+    const T& scalar
+) const {
+    Vector result(_row_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        result[i] = _vec[i] + scalar;
+    }
+
+    return result;
+}
+
+template<typename T>
 Vector<T> Vector<T>::operator-(
     const Vector& other
 ) const {
@@ -150,6 +162,18 @@ Vector<T> Vector<T>::operator-(
     Vector result(_row_cnt);
     for (size_t i = 0; i < _row_cnt; i++) {
         result[i] = _vec[i] - other[i];
+    }
+
+    return result;
+}
+
+template<typename T>
+Vector<T> Vector<T>::operator-(
+    const T& scalar
+) const {
+    Vector result(_row_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        result[i] = _vec[i] - scalar;
     }
 
     return result;
@@ -174,6 +198,18 @@ Vector<T> Vector<T>::operator/(
     Vector result(_row_cnt);
     for (size_t i = 0; i < _row_cnt; i++) {
         result[i] = _vec[i] / scalar;
+    }
+
+    return result;
+}
+
+template<typename T>
+T Vector<T>::dot(
+    const Vector<T>& other
+) const {
+    T result = 0;
+    for (size_t i = 0; i < _row_cnt; i++) {
+        result += _vec[i] * other._vec[i];
     }
 
     return result;

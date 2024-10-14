@@ -86,8 +86,16 @@ class Vector {
             const Vector& other
         ) const;
 
+        Vector operator+(
+            const T& scalar
+        ) const;
+
         Vector operator-(
             const Vector& other
+        ) const;
+
+        Vector operator-(
+            const T& scalar
         ) const;
 
         Vector operator*(
@@ -96,6 +104,10 @@ class Vector {
 
         Vector operator/(
             const T& scalar
+        ) const;
+
+        T dot(
+            const Vector<T>& other
         ) const;
 
         double norm(

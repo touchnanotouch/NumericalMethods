@@ -22,6 +22,7 @@ void Matrix<T>::elimination(
     for (size_t k = 0; k < n; k++) {
         T diag_val = mat[k][k];
 
+        #pragma omp parallel for
         for (size_t i = k + 1; i < n; i++) {
             double mu = mat[i][k] / diag_val;
 
@@ -29,6 +30,7 @@ void Matrix<T>::elimination(
                 mat[i][j] -= mat[k][j] * mu;
         }
 
+        #pragma omp parallel for
         for (size_t i = 0; i < k; i++) {
             double mu = mat[i][k] / diag_val;
 

@@ -28,6 +28,7 @@ void SoLE<T>::elimination(
     for (size_t k = 0; k < n; k++) {
         T diag_val = mat_copy[k][k];
 
+        #pragma omp parallel for
         for (size_t i = k + 1; i < n; i++) {
             double mu = mat_copy[i][k] / diag_val;
 
@@ -37,6 +38,7 @@ void SoLE<T>::elimination(
             vec_copy[i] -= vec_copy[k] * mu;
         }
 
+        #pragma omp parallel for
         for (size_t i = 0; i < k; i++) {
             double mu = mat_copy[i][k] / diag_val;
 
@@ -48,8 +50,11 @@ void SoLE<T>::elimination(
         }
     }
 
-    set_matrix(mat_copy);
-    set_vector(vec_copy);
+    #pragma omp critical
+    {
+        set_matrix(mat_copy);
+        set_vector(vec_copy);
+    }
 }
 
 template<typename T>
@@ -84,39 +89,53 @@ Vector<T> SoLE<T>::calc_next_x(
  
         switch (mtd) {
             case 1: {
+                #pragma omp parallel for
                 for (size_t j = 0; j < n; j++) {
                     if (j != i) {
                         sum += matr[i][j] * x[j];
                     }
                 }
 
-                x[i] = (vect[i] - sum) / matr[i][i];
+                #pragma omp critical
+                {
+                    x[i] = (vect[i] - sum) / matr[i][i];
+                }
 
                 break;
             }
             case 2: {
+                #pragma omp parallel for
                 for (size_t j = 0; j < i; j++) {
                     sum += matr[i][j] * x[j];
                 }
 
+                #pragma omp parallel for
                 for (size_t j = i + 1; j < n; j++) {
                     sum += matr[i][j] * x[j];
                 }
 
-                x[i] = (vect[i] - sum) / matr[i][i];
+                #pragma omp critical
+                {
+                    x[i] = (vect[i] - sum) / matr[i][i];
+                }
 
                 break;
             }
             case 3: {
+                #pragma omp parallel for
                 for (size_t j = 0; j < i; j++) {
                     sum += matr[i][j] * x[j];
                 }
 
+                #pragma omp parallel for
                 for (size_t j = i + 1; j < n; j++) {
                     sum += matr[i][j] * x[j];
                 }
 
-                x[i] = (1 - res_omega) * x[i] + res_omega * (vect[i] - sum) / matr[i][i];
+                #pragma omp critical
+                {
+                    x[i] = (1 - res_omega) * x[i] + res_omega * (vect[i] - sum) / matr[i][i];   
+                }
 
                 break;
             }
@@ -130,13 +149,18 @@ Vector<T> SoLE<T>::calc_next_x(
                 break;
             }
             case 5: {
+                #pragma omp parallel for
                 for (int j = 0; j < grad_iter; j++) {
                     Vector<T> grad = vect - matr * x;
 
                     double alpha = 1 / (1 + grad.norm());
 
+                    #pragma omp parallel for
                     for (size_t k = 0; k < n; k++) {
-                        x[k] = x[k] + alpha * grad[k];
+                        #pragma omp critical
+                        {
+                            x[k] = x[k] + alpha * grad[k];
+                        }
                     }
                 }
 
@@ -405,15 +429,23 @@ Vector<T> SoLE<T>::solve(
         P[0] = -matr[0][1] / matr[0][0];
         Q[0] = vect[0] / matr[0][0];
 
+        #pragma omp parallel for
         for (size_t i = 1; i < n; i++) {
-            P[i] = -matr[i][i + 1] / (matr[i][i] + matr[i][i - 1] * P[i - 1]);
-            Q[i] = (vect[i] - matr[i][i - 1] * Q[i - 1]) / (matr[i][i] + matr[i][i - 1] * P[i - 1]);
+            #pragma omp critical
+            {
+                P[i] = -matr[i][i + 1] / (matr[i][i] + matr[i][i - 1] * P[i - 1]);
+                Q[i] = (vect[i] - matr[i][i - 1] * Q[i - 1]) / (matr[i][i] + matr[i][i - 1] * P[i - 1]);
+            }
         }
 
         x[n - 1] = Q[n - 1];
 
+        #pragma omp parallel for
         for (size_t i = n - 1; i > 0; i--) {
-            x[i - 1] = P[i - 1] * x[i] + Q[i - 1];
+            #pragma omp critical
+            {
+                x[i - 1] = P[i - 1] * x[i] + Q[i - 1];
+            }
         }
     } else if (method == "lu") {
         Matrix<T> L(n, n);
@@ -421,34 +453,54 @@ Vector<T> SoLE<T>::solve(
 
         Vector<T> y(n);
 
+        #pragma omp parallel for
         for (int k = 0; k < n; k++) {
             U[k][k] = matr[k][k];
 
+            #pragma omp parallel for
             for (int i = k + 1; i < n; i++) {
-                L[i][k] = matr[i][k] / U[k][k];
-                U[k][i] = matr[k][i];
+                #pragma omp critical
+                {
+                    L[i][k] = matr[i][k] / U[k][k];
+                    U[k][i] = matr[k][i];
+                }
             }
             
+            #pragma omp parallel for
             for (int i = k + 1; i < n; i++) {
+                #pragma omp parallel for
                 for(int j = k + 1; j < n; j++) {
-                    matr[i][j] = matr[i][j] - L[i][k] * U[k][j];
+                    #pragma omp critical
+                    {
+                        matr[i][j] = matr[i][j] - L[i][k] * U[k][j];
+                    }
                 }
             }
         }
 
+        #pragma omp parallel for
         for (int i = 0; i < n; i++) {
             y[i] = vect[i];
 
+            #pragma omp parallel for
             for (int j = 0; j < i; j++) {
-                y[i] -= L[i][j] * y[j];
+                #pragma omp critical
+                {
+                    y[i] -= L[i][j] * y[j];
+                }
             }
         }
 
+        #pragma omp parallel for
         for (int i = n - 1; i >= 0; i--) {
             x[i] = y[i];
 
+            #pragma omp parallel for
             for (int j = i + 1; j < n; j++) {
-                x[i] -= U[i][j] * x[j];
+                #pragma omp critical
+                {
+                    x[i] -= U[i][j] * x[j];
+                }
             }
 
             x[i] /= U[i][i];
@@ -458,27 +510,41 @@ Vector<T> SoLE<T>::solve(
 
         Vector<T> y(n);
 
+        #pragma omp parallel for
         for (int i = 0; i < n; i++) {
+            #pragma omp parallel for
             for (int j = 0; j <= i; j++) {
                 T sum = 0;
 
+                #pragma omp parallel for
                 for (int k = 0; k < j; k++) {
-                    sum += L[i][k] * L[j][k];
+                    #pragma omp critical
+                    {
+                        sum += L[i][k] * L[j][k];
+                    }
                 }
 
                 if (i == j) {
-                    L[i][j] = std::sqrt(matr[i][i] - sum);
+                    #pragma omp critical
+                    {
+                        L[i][j] = std::sqrt(matr[i][i] - sum);
+                    }
                 } else {
-                    L[i][j] = (matr[i][j] - sum) / L[j][j];
+                    #pragma omp critical
+                    {
+                        L[i][j] = (matr[i][j] - sum) / L[j][j];
+                    }
                 }
             }
         }
 
         Matrix<T> U = L.transposed();
 
+        #pragma omp parallel for
         for (int i = 0; i < n; i++) {
             y[i] = vect[i];
 
+            #pragma omp parallel for
             for (int j = 0; j < i; j++) {
                 y[i] -= L[i][j] * y[j];
             }
@@ -486,9 +552,11 @@ Vector<T> SoLE<T>::solve(
             y[i] /= L[i][i];
         }
 
+        #pragma omp parallel for
         for (int i = n - 1; i >= 0; i--) {
             x[i] = y[i];
 
+            #pragma omp parallel for
             for (int j = i + 1; j < n; j++) {
                 x[i] -= U[i][j] * x[j];
             }

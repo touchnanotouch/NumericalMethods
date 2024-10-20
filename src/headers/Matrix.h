@@ -10,6 +10,7 @@ class Matrix {
     private:
         size_t _row_cnt;
         size_t _col_cnt;
+
         T** _mat;
 
         void elimination(
@@ -73,6 +74,11 @@ class Matrix {
             T** matrix
         );
 
+        void set_matrix(
+            std::string file_path,
+            const char delimiter = ' '
+        );
+
         void swap(
             T* a,
             T* b
@@ -129,11 +135,27 @@ class Matrix {
             const T& scalar
         ) const;
 
+        Matrix operator+=(
+            const Matrix& other
+        ) const;
+
+        Matrix operator+=(
+            const T& scalar
+        ) const;
+
         Matrix operator-(
             const Matrix& other
         ) const;
 
         Matrix operator-(
+            const T& scalar
+        ) const;
+
+        Matrix operator-=(
+            const Matrix& other
+        ) const;
+
+        Matrix operator-=(
             const T& scalar
         ) const;
 
@@ -149,7 +171,23 @@ class Matrix {
             const T& scalar
         ) const;
 
+        Matrix operator*=(
+            const Matrix& other
+        ) const;
+
+        Vector<T> operator*=(
+            const Vector<T>& vector
+        ) const;
+
+        Matrix operator*=(
+            const T& scalar
+        ) const;
+
         Matrix operator/(
+            const T& scalar
+        ) const;
+
+        Matrix operator/=(
             const T& scalar
         ) const;
 

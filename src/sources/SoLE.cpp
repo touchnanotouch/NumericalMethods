@@ -1,6 +1,5 @@
 #include <string>
-#include <sstream>
-#include <fstream>
+#include <cmath>
 
 #include <omp.h>
 
@@ -105,13 +104,10 @@ Vector<T> SoLE<T>::calc_next_x(
             }
             case 2: {
                 #pragma omp parallel for
-                for (size_t j = 0; j < i; j++) {
-                    sum += matr[i][j] * x[j];
-                }
-
-                #pragma omp parallel for
-                for (size_t j = i + 1; j < n; j++) {
-                    sum += matr[i][j] * x[j];
+                for (size_t j = 0; j < n; j++) {
+                    if (j != i) {
+                        sum += matr[i][j] * x[j];
+                    }
                 }
 
                 #pragma omp critical
@@ -123,13 +119,10 @@ Vector<T> SoLE<T>::calc_next_x(
             }
             case 3: {
                 #pragma omp parallel for
-                for (size_t j = 0; j < i; j++) {
-                    sum += matr[i][j] * x[j];
-                }
-
-                #pragma omp parallel for
-                for (size_t j = i + 1; j < n; j++) {
-                    sum += matr[i][j] * x[j];
+                for (size_t j = 0; j < n; j++) {
+                    if (j != i) {
+                        sum += matr[i][j] * x[j];
+                    }
                 }
 
                 #pragma omp critical
@@ -141,27 +134,40 @@ Vector<T> SoLE<T>::calc_next_x(
             }
             case 4: {
                 Vector<T> r = vect - matr * x;
-
-                double alpha = (r.dot(r)) / (matr * r).dot(matr * r);
-
-                x[i] = x[i] + alpha * r[i];
-
+                Vector<T> matr_r = matr * r;
+        
+                x[i] += (r.dot(r)) / matr_r.dot(matr_r) * r[i];
                 break;
             }
             case 5: {
+                double cf = 0.9;
+
+                Vector<T> grad = vect - matr * x;
+                
+                double alpha = 1 / (1 + grad.norm());
+                double new_alpha = alpha;
+
                 #pragma omp parallel for
-                for (int j = 0; j < grad_iter; j++) {
-                    Vector<T> grad = vect - matr * x;
+                for (size_t k = 0; k < n; k++) {
+                    Vector<T> new_x(n);
+                    new_x[k] = x[k] + new_alpha * grad[k];
 
-                    double alpha = 1 / (1 + grad.norm());
+                    Vector<T> r = vect - matr * new_x;
+                    Vector<T> matr_r = matr * r;
 
-                    #pragma omp parallel for
-                    for (size_t k = 0; k < n; k++) {
-                        #pragma omp critical
-                        {
-                            x[k] = x[k] + alpha * grad[k];
-                        }
+                    double r_dot_r = r.dot(r);
+                    double matr_r_dot_matr_r = matr_r.dot(matr_r);
+
+                    if (r_dot_r <= matr_r_dot_matr_r * new_alpha) {
+                        break;
                     }
+
+                    new_alpha *= cf;
+                }
+
+                #pragma omp parallel for
+                for (size_t k = 0; k < n; k++) {
+                    x[k] = x[k] + new_alpha * grad[k];
                 }
 
                 break;
@@ -226,36 +232,7 @@ void SoLE<T>::set_matrix(
     std::string file_path,
     const char delimiter
 ) {
-    size_t n = row_count();
-    size_t m = col_count();
-
-    Matrix<T> result(n, m);
-
-    std::ifstream file(file_path);
-    std::string line;
-
-    for (size_t i = 0; i < n; i++) {
-        std::getline(file, line);
-        std::istringstream stream(line);
-        T value;
-
-        Vector<T> row(m);
-
-        for (size_t j = 0; j < m; j++) {
-            stream >> value;
-            row[j] = value;
-
-            if (stream.peek() == delimiter) {
-                stream.ignore();
-            }
-        }
-
-        result.set_row(row.vec(), i);
-    }
-
-    set_matrix(result);
-
-    file.close();
+    _coeffs.set_matrix(file_path, delimiter);
 }
 
 template <typename T>
@@ -267,35 +244,9 @@ void SoLE<T>::set_vector(
 
 template<typename T>
 void SoLE<T>::set_vector(
-    std::string file_path,
-    const char delimiter
+    std::string file_path
 ) {
-    size_t n = row_count();
-    size_t m = col_count();
-
-    Vector<T> result(n);
-
-    std::ifstream file(file_path);
-    std::string line;
-
-    for (size_t i = 0; i < n; i++) {
-        std::getline(file, line);
-        std::istringstream stream(line);
-        T value;
-    
-        for (size_t j = 0; j < m; j++) {
-            stream >> value;
-            result[j] = value;
-
-            if (stream.peek() == delimiter) {
-                stream.ignore();
-            }
-        }
-    }
-
-    set_vector(result);
-
-    file.close();
+    _terms.set_vector(file_path);
 }
 
 template<typename T>
@@ -422,7 +373,49 @@ Vector<T> SoLE<T>::solve(
 
     Vector<T> x(n);
 
-    if (method == "thomas") {
+    if (method == "gauss") {
+        #pragma omp parallel for
+        for (size_t i = 0; i < n; i++) {
+            size_t max_el = i;
+
+            #pragma omp parallel for reduction(max:max_el)
+            for (size_t k = i + 1; k < n; k++) {
+                if (abs(matr[k][i]) > abs(matr[max_el][i])) {
+                    max_el = k;
+                }
+            }
+
+            if (max_el != i) {
+                matr.swap(matr[i], matr[max_el]);
+                vect.swap(vect[i], vect[max_el]);
+            }
+
+            #pragma omp parallel for
+            for (size_t k = i + 1; k < n; k++) {
+                T c = matr[k][i] / matr[i][i];
+                T local_vect = vect[k];
+
+                #pragma omp parallel for
+                for (size_t j = i; j < n; j++) {
+                    local_vect -= c * matr[i][j];
+                }
+
+                vect[k] = local_vect;
+            }
+        }
+
+        #pragma omp parallel for
+        for (size_t i = n - 1; i > 0; i--) {
+            x[i] = vect[i];
+
+            #pragma omp parallel for reduction(-:x[i])
+            for (size_t k = i + 1; k < n - 1; k++) {
+                x[i] -= matr[i][k] * x[k];
+            }
+
+            x[i] /= matr[i][i];
+        }
+    } else if (method == "thomas") {
         Vector<T> P(n);
         Vector<T> Q(n);
 

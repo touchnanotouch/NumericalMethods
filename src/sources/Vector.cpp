@@ -1,3 +1,8 @@
+#include <sstream>
+#include <fstream>
+
+#include <omp.h>
+
 #include "../headers/Vector.h"
 
 
@@ -34,6 +39,29 @@ void Vector<T>::set_vector(
     for (size_t i = 0; i < _row_cnt; i++) {
         _vec[i] = vector[i];
     }
+}
+
+template<typename T>
+void Vector<T>::set_vector(
+    std::string file_path
+) {
+    size_t n = row_count();
+
+    Vector<T> result(n);
+
+    std::ifstream file(file_path);
+    std::string line;
+
+    for (size_t i = 0; i < n; i++) {
+        std::getline(file, line);
+        std::istringstream stream(line);
+
+        stream >> result[i];
+    }
+
+    set_vector(result.vec());
+
+    file.close();
 }
 
 template<typename T>
@@ -152,6 +180,34 @@ Vector<T> Vector<T>::operator+(
 }
 
 template<typename T>
+Vector<T> Vector<T>::operator+=(
+    const Vector& other
+) const {
+    if (_row_cnt != other._row_cnt) {
+        throw std::invalid_argument("Unmatching vector sizes");
+    }
+
+    Vector result(_row_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        result[i] = _vec[i] + other[i];
+    }
+
+    return result;
+}
+
+template<typename T>
+Vector<T> Vector<T>::operator+=(
+    const T& scalar
+) const {
+    Vector result(_row_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        result[i] = _vec[i] + scalar;
+    }
+
+    return result;
+}
+
+template<typename T>
 Vector<T> Vector<T>::operator-(
     const Vector& other
 ) const {
@@ -180,7 +236,47 @@ Vector<T> Vector<T>::operator-(
 }
 
 template<typename T>
+Vector<T> Vector<T>::operator-=(
+    const Vector& other
+) const {
+    if (_row_cnt != other._row_cnt) {
+        throw std::invalid_argument("Unmatching vector sizes");
+    }
+
+    Vector result(_row_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        result[i] = _vec[i] - other[i];
+    }
+
+    return result;
+}
+
+template<typename T>
+Vector<T> Vector<T>::operator-=(
+    const T& scalar
+) const {
+    Vector result(_row_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        result[i] = _vec[i] - scalar;
+    }
+
+    return result;
+}
+
+template<typename T>
 Vector<T> Vector<T>::operator*(
+    const T& scalar
+) const {
+    Vector result(_row_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        result[i] = _vec[i] * scalar;
+    }
+
+    return result;
+}
+
+template<typename T>
+Vector<T> Vector<T>::operator*=(
     const T& scalar
 ) const {
     Vector result(_row_cnt);
@@ -204,11 +300,26 @@ Vector<T> Vector<T>::operator/(
 }
 
 template<typename T>
+Vector<T> Vector<T>::operator/=(
+    const T& scalar
+) const {
+    Vector result(_row_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        result[i] = _vec[i] / scalar;
+    }
+
+    return result;
+}
+
+template<typename T>
 T Vector<T>::dot(
     const Vector<T>& other
 ) const {
+    size_t n = row_count();
+
     T result = 0;
-    for (size_t i = 0; i < _row_cnt; i++) {
+    #pragma omp parallel for reduction(+:result)
+    for (size_t i = 0; i < n; i++) {
         result += _vec[i] * other._vec[i];
     }
 
@@ -224,6 +335,7 @@ double Vector<T>::norm(
     T* vec = this->vec();
 
     double result = 0;
+    #pragma omp parallel for reduction(+:result)
     for (size_t i = 0; i < n; i++) {
         result += std::abs(vec[i]);
     }

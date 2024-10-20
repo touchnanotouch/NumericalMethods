@@ -12,6 +12,7 @@ class SoLE {
     private:
         size_t _row_cnt;
         size_t _col_cnt;
+
         Matrix<T> _coeffs;
         Vector<T> _terms;
 
@@ -32,7 +33,7 @@ class SoLE {
         ) : _coeffs(row_count, col_count), _terms(row_count) {
             _row_cnt = row_count;
             _col_cnt = col_count;
-        }
+        };
 
         ~SoLE() {
 
@@ -75,8 +76,7 @@ class SoLE {
         );
 
         void set_vector(
-            std::string file_path,
-            const char delimiter = ' '
+            std::string file_path
         );
 
         friend std::ostream& operator<<(
@@ -126,7 +126,7 @@ class SoLE {
             int iter_max = 100,
             double epsilon = 1e-5,
             double res_omega = 1.0,
-            int grad_iter = 1000
+            int grad_iter = 100
         ) const;
 
         Vector<T> solve(

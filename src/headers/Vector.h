@@ -7,8 +7,8 @@ template<typename T>
 class Vector {
     private:
         size_t _row_cnt;
-        T* _vec;
 
+        T* _vec;
     public:
         Vector(
             size_t row_count
@@ -39,6 +39,10 @@ class Vector {
 
         void set_vector(
             T* vector
+        );
+
+        void set_vector(
+            std::string file_path
         );
 
         void swap(
@@ -90,6 +94,14 @@ class Vector {
             const T& scalar
         ) const;
 
+        Vector operator+=(
+            const Vector& other
+        ) const;
+
+        Vector operator+=(
+            const T& scalar
+        ) const;
+
         Vector operator-(
             const Vector& other
         ) const;
@@ -98,11 +110,27 @@ class Vector {
             const T& scalar
         ) const;
 
+        Vector operator-=(
+            const Vector& other
+        ) const;
+
+        Vector operator-=(
+            const T& scalar
+        ) const;
+
         Vector operator*(
+            const T& scalar
+        ) const;
+        
+        Vector operator*=(
             const T& scalar
         ) const;
 
         Vector operator/(
+            const T& scalar
+        ) const;
+        
+        Vector operator/=(
             const T& scalar
         ) const;
 

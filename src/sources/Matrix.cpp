@@ -1,4 +1,6 @@
 #include <cmath>
+#include <sstream>
+#include <fstream>
 
 #include <omp.h>
 
@@ -105,6 +107,43 @@ void Matrix<T>::set_matrix(
             _mat[i][j] = matrix[i][j];
         }
     }
+}
+
+template<typename T>
+void Matrix<T>::set_matrix(
+    std::string file_path,
+    const char delimiter
+) {
+    size_t n = row_count();
+    size_t m = col_count();
+
+    Matrix<T> result(n, m);
+
+    std::ifstream file(file_path);
+    std::string line;
+
+    for (size_t i = 0; i < n; i++) {
+        std::getline(file, line);
+        std::istringstream stream(line);
+        T value;
+
+        Vector<T> row(m);
+
+        for (size_t j = 0; j < m; j++) {
+            stream >> value;
+            row[j] = value;
+
+            if (stream.peek() == delimiter) {
+                stream.ignore();
+            }
+        }
+
+        result.set_row(row.vec(), i);
+    }
+
+    set_matrix(result.mat());
+
+    file.close();
 }
 
 template<typename T>
@@ -255,6 +294,39 @@ Matrix<T> Matrix<T>::operator+(
 }
 
 template<typename T>
+Matrix<T> Matrix<T>::operator+=(
+    const Matrix<T>& other
+) const {
+    if (_row_cnt != other._row_cnt || _col_cnt != other._col_cnt) {
+        throw std::invalid_argument("Unmatching matrix sizes");
+    }
+
+    Matrix result(_row_cnt, _col_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
+            result[i][j] = _mat[i][j] + other[i][j];
+        }
+    }
+
+    return result;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::operator+=(
+    const T& scalar
+) const {
+    Matrix result(_row_cnt, _col_cnt);
+
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
+            result[i][j] = _mat[i][j] + scalar;
+        }
+    }
+
+    return result;
+}
+
+template<typename T>
 Matrix<T> Matrix<T>::operator-(
     const Matrix& other
 ) const {
@@ -274,6 +346,39 @@ Matrix<T> Matrix<T>::operator-(
 
 template<typename T>
 Matrix<T> Matrix<T>::operator-(
+    const T& scalar
+) const {
+    Matrix result(_row_cnt, _col_cnt);
+
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
+            result[i][j] = _mat[i][j] - scalar;
+        }
+    }
+
+    return result;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::operator-=(
+    const Matrix& other
+) const {
+    if (_row_cnt != other._row_cnt || _col_cnt != other._col_cnt) {
+        throw std::invalid_argument("Unmatching matrix sizes");
+    }
+
+    Matrix result(_row_cnt, _col_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
+            result[i][j] = _mat[i][j] - other[i][j];
+        }
+    }
+
+    return result;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::operator-=(
     const T& scalar
 ) const {
     Matrix result(_row_cnt, _col_cnt);
@@ -340,7 +445,73 @@ Matrix<T> Matrix<T>::operator*(
 }
 
 template<typename T>
+Matrix<T> Matrix<T>::operator*=(
+    const Matrix& other
+) const {
+    if (_col_cnt != other._row_cnt) {
+        throw std::invalid_argument("Unmatching matrix sizes");
+    }
+
+    Matrix result(_row_cnt, other._col_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < other._col_cnt; j++) {
+            for (size_t k = 0; k < _col_cnt; k++) {
+                result[i][j] += _mat[i][k] * other[k][j];
+            }
+        }
+    }
+
+    return result;
+}
+
+template<typename T>
+Vector<T> Matrix<T>::operator*=(
+    const Vector<T>& vector
+) const {
+    if (_col_cnt != vector.row_count()) {
+        throw std::invalid_argument("Unmatching matrix and vector sizes");
+    }
+
+    Vector<T> result(_row_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
+            result[i] += _mat[i][j] * vector[j];
+        }
+    }
+
+    return result;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::operator*=(
+    const T& scalar
+) const {
+    Matrix result(_row_cnt, _col_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
+            result._mat[i][j] = _mat[i][j] * scalar;
+        }
+    }
+
+    return result;
+}
+
+template<typename T>
 Matrix<T> Matrix<T>::operator/(
+    const T& scalar
+) const {
+    Matrix result(_row_cnt, _col_cnt);
+    for (size_t i = 0; i < _row_cnt; i++) {
+        for (size_t j = 0; j < _col_cnt; j++) {
+            result._mat[i][j] = _mat[i][j] / scalar;
+        }
+    }
+
+    return result;
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::operator/=(
     const T& scalar
 ) const {
     Matrix result(_row_cnt, _col_cnt);

@@ -23,7 +23,6 @@ for n in n_s:
         other_elements = np.sum(np.abs(matrix[i, :i])) + np.sum(np.abs(matrix[i, i+1:]))
         matrix[i, i] = diagonal_element + other_elements + 1
 
-
     b = [rd.uniform(-10 * min_tens, 10 * max_tens) for _ in range(n)]
 
     sol = np.linalg.solve(matrix, b)

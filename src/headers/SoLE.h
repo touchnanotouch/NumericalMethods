@@ -95,26 +95,34 @@ class SoLE {
 
         double det(
 
-        );
+        ) const;
 
         int rank(
 
-        );
+        ) const;
 
         bool is_compatible(
 
-        );
+        ) const;
+
+        bool is_diag(
+
+        ) const;
+
+        bool is_diag_d(
+
+        ) const;
+
+        bool is_solvable(
+    
+        ) const;
 
         bool is_solution(
             Vector<T>& solution
         ) const;
 
-        bool is_diag_d(
-
-        );
-
-        bool is_solvable(
-    
+        void to_diag(
+        
         );
 
         void to_diag_d(

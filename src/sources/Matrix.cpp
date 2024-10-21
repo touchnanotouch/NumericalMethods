@@ -29,7 +29,7 @@ void Matrix<T>::elimination(
             double mu = mat[i][k] / diag_val;
 
             for (size_t j = 0; j < n; j++)
-                mat[i][j] -= mat[k][j] * mu;
+                mat[i][j] -= mat[k][j] * static_cast<T>(mu);
         }
 
         #pragma omp parallel for
@@ -37,7 +37,7 @@ void Matrix<T>::elimination(
             double mu = mat[i][k] / diag_val;
 
             for (size_t j = 0; j < n; j++) {
-                mat[i][j] -= mat[k][j] * mu;
+                mat[i][j] -= mat[k][j] * static_cast<T>(mu);
             }
         }
     }
@@ -81,7 +81,7 @@ void Matrix<T>::set_col_count(
 template<typename T>
 void Matrix<T>::set_row(
     T* row,
-    int index
+    size_t index
 ) {
     for (size_t i = 0; i < _row_cnt; i++) {
         _mat[index][i] = row[i];
@@ -91,7 +91,7 @@ void Matrix<T>::set_row(
 template<typename T>
 void Matrix<T>::set_col(
     T* col,
-    int index
+    size_t index
 ) {
     for (size_t i = 0; i < _col_cnt; i++) {
         _mat[i][index] = col[i];
@@ -231,7 +231,7 @@ Matrix<T>& Matrix<T>::operator=(
 
 template<typename T>
 T*& Matrix<T>::operator[](
-    int index
+    size_t index
 ) const {
     if (index < 0 || index >= _row_cnt && index >= _col_cnt) {
         throw std::out_of_range("Index out of range");
@@ -573,7 +573,7 @@ Matrix<T> Matrix<T>::cofactors(
                 }
             }
 
-            cof[i][j] = std::pow(-1, i + j) * minor.det();
+            cof[i][j] = static_cast<T>(std::pow(-1, i + j) * minor.det());
         }
     }
 
@@ -590,7 +590,7 @@ Matrix<T> Matrix<T>::inversed(
         throw std::runtime_error("Singular matrix");
     }
 
-    Matrix<T> cof = cofactors() / determ;
+    Matrix<T> cof = cofactors() / static_cast<T>(determ);
 
     return cof;
 }
@@ -653,6 +653,29 @@ int Matrix<T>::rank(
 }
 
 template<typename T>
+bool Matrix<T>::is_diag(
+) const {
+    size_t n = row_count();
+    size_t m = col_count();
+
+    if (n != m) {
+        return false;
+    }
+
+    T** mat = this->mat();
+
+    for (size_t i = 0; i < n; i++) {
+        for (size_t j = 0; j < m; j++) {
+            if (i != j && mat[i][j] != 0) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+template<typename T>
 bool Matrix<T>::is_diag_d(
 
 ) const {
@@ -680,19 +703,26 @@ bool Matrix<T>::is_diag_d(
 }
 
 template<typename T>
+void Matrix<T>::to_diag(
+
+) {
+    elimination();
+}
+
+template<typename T>
 void Matrix<T>::to_diag_d(
     
 ) {
-    elimination();
+    // to_diag();
     
-    //size_t n = row_count();
+    size_t n = row_count();
 
-    //Matrix<T> E(n, n);
-    //for (size_t i = 0; i < n; i++) {
-    //    E[i][i] = 1;
-    //}
+    Matrix<T> E(n, n);
+    for (size_t i = 0; i < n; i++) {
+       E[i][i] = 1;
+    }
 
-    //Matrix<T> mat_new = inversed() * E;
+    Matrix<T> mat_new = inversed() * E;
 
-    //set_matrix(mat_new.mat());
+    set_matrix(mat_new.mat());
 }

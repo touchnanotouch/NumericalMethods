@@ -62,12 +62,12 @@ class Matrix {
 
         void set_row(
             T* row,
-            int index
+            size_t index
         );
 
         void set_col(
             T* col,
-            int index
+            size_t index
         );
 
         void set_matrix(
@@ -120,7 +120,7 @@ class Matrix {
         };
 
         T*& operator[](
-            int index
+            size_t index
         ) const;
 
         bool operator==(
@@ -219,9 +219,17 @@ class Matrix {
 
         ) const;
 
+        bool is_diag(
+
+        ) const;
+
         bool is_diag_d(
 
         ) const;
+
+        void to_diag(
+
+        );
 
         void to_diag_d(
 

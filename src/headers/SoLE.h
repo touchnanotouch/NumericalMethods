@@ -22,8 +22,8 @@ class SoLE {
 
         Vector<T> calc_next_x(
             Vector<T> x,
+            Vector<T> x_prev,
             std::string method,
-            double res_omega,
             int grad_iter
         ) const;
     public:
@@ -133,7 +133,6 @@ class SoLE {
             std::string method = "si",
             int iter_max = 100,
             double epsilon = 1e-5,
-            double res_omega = 1.0,
             int grad_iter = 100
         ) const;
 

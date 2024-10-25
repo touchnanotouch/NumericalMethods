@@ -7,9 +7,10 @@ import plotly.graph_objects as go
 import pandas as pd
 
 
+n_s = [10, 25, 50, 75, 100]
 # n_s = [10, 25, 50, 75, 100, 250]
 # n_s = [10, 25, 50, 75, 100, 250, 500]
-n_s = [10, 25, 50, 75, 100, 250, 500, 750, 1000]
+# n_s = [10, 25, 50, 75, 100, 250, 500, 750, 1000]
 
 infos = {}
 
@@ -84,6 +85,9 @@ fig1.update_layout(
     yaxis_title="Точность решения (%)",
     yaxis=dict(tickformat=".2ef")
 )
+
+fig.write_html("exact_times.html")
+fig1.write_html("exact_accuracies.html")
 
 fig.show()
 fig1.show()

@@ -7,7 +7,6 @@
 
 
 template class Vector<int>;
-template class Vector<float>;
 template class Vector<double>;
 
 

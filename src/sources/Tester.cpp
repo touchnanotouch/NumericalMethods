@@ -9,7 +9,6 @@
 
 
 template class Tester<int>;
-template class Tester<float>;
 template class Tester<double>;
 
 
@@ -50,7 +49,7 @@ std::string Tester<T>::solution_iter(
 ) const {
     Vector<T> si_sol = _sole.solve_iter("si");
     Vector<T> seidel_sol = _sole.solve_iter("seidel");
-    Vector<T> sor_sol = _sole.solve_iter("sor");
+    Vector<T> rel_sol = _sole.solve_iter("rel");
     Vector<T> res_sol = _sole.solve_iter("res");
     Vector<T> grad_sol = _sole.solve_iter("grad");
 
@@ -59,7 +58,7 @@ std::string Tester<T>::solution_iter(
     ss << "\nIterative methods (solution)\n" << std::endl;
     ss << "si: " << si_sol;
     ss << "seidel: " << seidel_sol;
-    ss << "sor: " << sor_sol;
+    ss << "rel: " << rel_sol;
     ss << "res: " << res_sol;
     ss << "grad: " << grad_sol;
 
@@ -104,7 +103,7 @@ std::string Tester<T>::time_iter(
 ) const {
     double si_time = execution_time([&](){ _sole.solve_iter("si"); });
     double seidel_time = execution_time([&](){ _sole.solve_iter("seidel"); });
-    double sor_time = execution_time([&](){ _sole.solve_iter("sor"); });
+    double rel_time = execution_time([&](){ _sole.solve_iter("rel"); });
     double res_time = execution_time([&](){ _sole.solve_iter("res"); });
     double grad_time = execution_time([&](){ _sole.solve_iter("grad"); });
 
@@ -113,7 +112,7 @@ std::string Tester<T>::time_iter(
     ss << "\nIterative methods (execution time)\n" << std::endl;
     ss << "si: " << si_time << "s" << std::endl;
     ss << "seidel: " << seidel_time << "s" << std::endl;
-    ss << "sor: " << sor_time << "s" << std::endl;
+    ss << "rel: " << rel_time << "s" << std::endl;
     ss << "res: " << res_time << "s" << std::endl;
     ss << "grad: " << grad_time << "s" << std::endl;
 
@@ -158,7 +157,7 @@ std::string Tester<T>::accuracy_iter(
 ) const {
     Vector<T> si_sol = _sole.solve_iter("si");
     Vector<T> seidel_sol = _sole.solve_iter("seidel");
-    Vector<T> sor_sol = _sole.solve_iter("sor");
+    Vector<T> rel_sol = _sole.solve_iter("rel");
     Vector<T> res_sol = _sole.solve_iter("res");
     Vector<T> grad_sol = _sole.solve_iter("grad");
 
@@ -167,7 +166,7 @@ std::string Tester<T>::accuracy_iter(
     ss << "\nIterative methods (accuracy)\n" << std::endl;
     ss << "si: " << solution_accuracy(si_sol, actual) << std::endl;
     ss << "seidel: " << solution_accuracy(seidel_sol, actual) << std::endl;
-    ss << "sor: " << solution_accuracy(sor_sol, actual) << std::endl;
+    ss << "rel: " << solution_accuracy(rel_sol, actual) << std::endl;
     ss << "res: " << solution_accuracy(res_sol, actual) << std::endl;
     ss << "grad: " << solution_accuracy(grad_sol, actual) << std::endl;
 
@@ -223,10 +222,10 @@ std::string Tester<T>::measure_iter(
     double seidel_time = std::chrono::duration_cast<std::chrono::duration<double>>(end_time1 - start_time1).count();
 
     auto start_time2 = std::chrono::high_resolution_clock::now();
-    Vector<T> sor_sol = _sole.solve_iter("sor");
+    Vector<T> rel_sol = _sole.solve_iter("rel");
     auto end_time2 = std::chrono::high_resolution_clock::now();
 
-    double sor_time = std::chrono::duration_cast<std::chrono::duration<double>>(end_time2 - start_time2).count();
+    double rel_time = std::chrono::duration_cast<std::chrono::duration<double>>(end_time2 - start_time2).count();
 
     auto start_time3 = std::chrono::high_resolution_clock::now();
     Vector<T> res_sol = _sole.solve_iter("res");
@@ -246,7 +245,7 @@ std::string Tester<T>::measure_iter(
 
     ss << "si: " << si_time << "s" << std::endl;
     ss << "seidel: " << seidel_time << "s" << std::endl;
-    ss << "sor: " << sor_time << "s" << std::endl;
+    ss << "rel: " << rel_time << "s" << std::endl;
     ss << "res: " << res_time << "s" << std::endl;
     ss << "grad: " << grad_time << "s" << std::endl;
 
@@ -254,7 +253,7 @@ std::string Tester<T>::measure_iter(
 
     ss << "si: " << solution_accuracy(si_sol, actual) << "%" << std::endl;
     ss << "seidel: " << solution_accuracy(seidel_sol, actual) << "%" << std::endl;
-    ss << "sor: " << solution_accuracy(sor_sol, actual) << "%" << std::endl;
+    ss << "rel: " << solution_accuracy(rel_sol, actual) << "%" << std::endl;
     ss << "res: " << solution_accuracy(res_sol, actual) << "%" << std::endl;
     ss << "grad: " << solution_accuracy(grad_sol, actual) << "%" << std::endl;
 

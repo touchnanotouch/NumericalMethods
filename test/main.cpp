@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 
+#include "../headers/SoLE.h"
 #include "../headers/Vector.h"
 #include "../headers/Tester.h"
 
@@ -28,6 +29,13 @@ int main() {
 
             Vector<double> solution(n);
             solution.set_vector(s_path);
+
+            // SoLE<double> sole(n, n);
+            // sole.set_matrix(m_path);
+            // sole.set_vector(v_path);
+
+            // std::cout << "\n\n\n\n" << sole.solve_iter("si") << std::endl;
+            // std::cout << sole.solve_iter("seidel") << std::endl;
 
             std::stringstream ss;
 

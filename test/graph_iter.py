@@ -7,9 +7,10 @@ import plotly.graph_objects as go
 import pandas as pd
 
 
+n_s = [10, 25, 50, 75, 100]
 # n_s = [10, 25, 50, 75, 100, 250]
 # n_s = [10, 25, 50, 75, 100, 250, 500]
-n_s = [10, 25, 50, 75, 100, 250, 500, 750, 1000]
+# n_s = [10, 25, 50, 75, 100, 250, 500, 750, 1000]
 
 infos = {}
 
@@ -29,8 +30,8 @@ for n in n_s:
                 times["si"] = (float(line.split(":")[1].strip()[:-1]))
             elif "seidel" in line:
                 times["seidel"] = (float(line.split(":")[1].strip()[:-1]))
-            elif "sor" in line:
-                times["sor"] = (float(line.split(":")[1].strip()[:-1]))
+            elif "rel" in line:
+                times["rel"] = (float(line.split(":")[1].strip()[:-1]))
             elif "res" in line:
                 times["res"] = (float(line.split(":")[1].strip()[:-1]))
             elif "grad" in line:
@@ -41,8 +42,8 @@ for n in n_s:
                 accuracies["si"] = (float(line.split(":")[1].strip()[:-1]))
             elif "seidel" in line:
                 accuracies["seidel"] = (float(line.split(":")[1].strip()[:-1]))
-            elif "sor" in line:
-                accuracies["sor"] = (float(line.split(":")[1].strip()[:-1]))
+            elif "rel" in line:
+                accuracies["rel"] = (float(line.split(":")[1].strip()[:-1]))
             elif "res" in line:
                 accuracies["res"] = (float(line.split(":")[1].strip()[:-1]))
             elif "grad" in line:
@@ -62,7 +63,7 @@ times_data = []
 accuracies_data = []
 
 for n in n_s:
-    for algo in ["si", "seidel", "sor", "res", "grad"]:
+    for algo in ["si", "seidel", "rel", "res", "grad"]:
         times_data.append({"n": n, "algo": algo, "time": infos[n]["times"][algo]})
         accuracies_data.append({"n": n, "algo": algo, "accuracy": infos[n]["accuracies"][algo]})
 
@@ -81,13 +82,16 @@ fig.update_layout(
 
 fig1 = px.line(accuracies_df, x="n", y="accuracy", color="algo", markers=True)
 
-fig.update_layout(
+fig1.update_layout(
     title="График точности решений СЛАУ, полученных итерационными методами",
     legend=dict(title="Методы"),
     xaxis_title="Количество переменных в СЛАУ (n)",
     yaxis_title="Точность решения (%)",
     yaxis=dict(tickformat=".2ef")
 )
+
+fig.write_html("iter_times.html")
+fig1.write_html("itre_accuracies.html")
 
 fig.show()
 fig1.show()

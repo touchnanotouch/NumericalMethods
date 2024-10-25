@@ -7,7 +7,6 @@
 
 
 template class SoLE<int>;
-template class SoLE<float>;
 template class SoLE<double>;
 
 
@@ -59,8 +58,8 @@ void SoLE<T>::elimination(
 template<typename T>
 Vector<T> SoLE<T>::calc_next_x(
     Vector<T> x,
+    Vector<T> x_prev,
     std::string method,
-    double res_omega,
     int grad_iter
 ) const {
     size_t n = row_count();
@@ -91,7 +90,7 @@ Vector<T> SoLE<T>::calc_next_x(
                 #pragma omp parallel for
                 for (size_t j = 0; j < n; j++) {
                     if (j != i) {
-                        sum += matr[i][j] * x[j];
+                        sum += matr[i][j] * x_prev[j];
                     }
                 }
 
@@ -118,6 +117,9 @@ Vector<T> SoLE<T>::calc_next_x(
                 break;
             }
             case 3: {
+                double err_prev = 0.0;
+                double omega = 0.5;
+
                 #pragma omp parallel for
                 for (size_t j = 0; j < n; j++) {
                     if (j != i) {
@@ -125,9 +127,15 @@ Vector<T> SoLE<T>::calc_next_x(
                     }
                 }
 
+                double err = std::fabs(vect[i] - sum - matr[i][i] * x[i]);
+                if (err_prev != 0.0) {
+                    omega = (err / err_prev) * omega;
+                }
+                err_prev = err;
+
                 #pragma omp critical
                 {
-                    x[i] = (1 - res_omega) * x[i] + res_omega * (vect[i] - sum) / matr[i][i];   
+                    x[i] = (1 - omega) * x[i] + omega * (vect[i] - sum) / matr[i][i];
                 }
 
                 break;
@@ -353,24 +361,35 @@ Vector<T> SoLE<T>::solve_iter(
     std::string method,
     int iter_max,
     double epsilon,
-    double res_omega,
     int grad_iter
 ) const {
-    Vector<T> x(row_count());
+    size_t n = row_count();
+
+    Matrix<T> matr = matrix();
+    Vector<T> vect = vector();
+
+    double x_norm_prev;
+
+    Vector<T> x(n);
+    Vector<T> x_prev(n);
+
+    // std::cout << "\n\n" << method << std::endl;
 
     for (int i = 0; i < iter_max; i++) {
-        Vector<T> x_next = calc_next_x(x, method, res_omega, grad_iter);
+        Vector<T> x_next = calc_next_x(x, x_prev, method, grad_iter);
 
         double x_norm = (x_next - x).norm();
 
-        // std::cout << "iter " << i + 1 << ", norm: " << x_norm << std::endl;
+        // std::cout << "i: " << i + 1 << ", norm: " << x_norm << std::endl;
 
         if (x_norm < epsilon) {
-            // std::cout << std::endl;
             break;
         }
 
+        x_prev = x;
         x = x_next;
+
+        x_norm_prev = x_norm;
     }
 
     return x;

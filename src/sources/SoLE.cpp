@@ -368,8 +368,6 @@ Vector<T> SoLE<T>::solve_iter(
     Matrix<T> matr = matrix();
     Vector<T> vect = vector();
 
-    double x_norm_prev;
-
     Vector<T> x(n);
     Vector<T> x_prev(n);
 
@@ -388,8 +386,6 @@ Vector<T> SoLE<T>::solve_iter(
 
         x_prev = x;
         x = x_next;
-
-        x_norm_prev = x_norm;
     }
 
     return x;

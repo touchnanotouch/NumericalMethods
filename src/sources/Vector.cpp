@@ -42,7 +42,8 @@ void Vector<T>::set_vector(
 
 template<typename T>
 void Vector<T>::set_vector(
-    std::string file_path
+    std::string file_path,
+    const char delimiter
 ) {
     size_t n = row_count();
 
@@ -51,11 +52,18 @@ void Vector<T>::set_vector(
     std::ifstream file(file_path);
     std::string line;
 
-    for (size_t i = 0; i < n; i++) {
-        std::getline(file, line);
+    size_t i = 0;
+    while (std::getline(file, line) && i < n) {
         std::istringstream stream(line);
 
-        stream >> result[i];
+        T value;
+        while (stream >> value) {
+            result[i++] = value;
+
+            if (stream.peek() == delimiter) {
+                stream.ignore();
+            }
+        }
     }
 
     set_vector(result.vec());

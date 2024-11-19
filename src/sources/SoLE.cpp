@@ -190,14 +190,14 @@ template<typename T>
 size_t SoLE<T>::row_count(
     
 ) const {
-    return _row_cnt;
+    return _coeffs.row_count();
 }
 
 template<typename T>
 size_t SoLE<T>::col_count(
 
 ) const {
-    return _col_cnt;
+    return _coeffs.col_count();
 }
 
 template<typename T>
@@ -218,14 +218,15 @@ template<typename T>
 void SoLE<T>::set_row_count(
     size_t row_count
 ) {
-    _row_cnt = row_count;
+    _coeffs.set_row_count(row_count);
+    _terms.set_row_count(row_count);
 }
 
 template<typename T>
 void SoLE<T>::set_col_count(
     size_t col_count
 ) {
-    _col_cnt = col_count;
+    _coeffs.set_col_count(col_count);
 }
 
 template<typename T>
@@ -252,9 +253,10 @@ void SoLE<T>::set_vector(
 
 template<typename T>
 void SoLE<T>::set_vector(
-    std::string file_path
+    std::string file_path,
+    const char delimiter
 ) {
-    _terms.set_vector(file_path);
+    _terms.set_vector(file_path, delimiter);
 }
 
 template<typename T>

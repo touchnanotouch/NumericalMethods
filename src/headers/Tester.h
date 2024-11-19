@@ -38,6 +38,12 @@ class Tester {
             _sole.set_vector(_v_path);
         };
 
+        ~Tester(
+            
+        ) {
+            ;
+        };
+
         std::string solution_iter(
 
         ) const;

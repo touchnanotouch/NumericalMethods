@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 #include <functional>
 #include <cmath>
 
@@ -13,8 +14,8 @@ template class NLE<double>;
 
 template<typename T>
 double NLE<T>::calc_next_x(
-    T x,
-    T x_prev,
+    double x,
+    double x_prev,
     double a,
     double b,
     std::string method
@@ -27,27 +28,24 @@ double NLE<T>::calc_next_x(
         mtd = 2;
     } else if (method == "secant") {
         mtd = 3;
-    } else if (method == "chord") {
-        mtd = 4;
     } else if (method == "bisec") {
+        mtd = 4;
+    } else if (method == "chord") {
         mtd = 5;
-    } else if (method == "muller") {
-        mtd = 6;
-    } else if (method == "brent") {
-        mtd = 7;
     }
+
+    const double epsilon = 1e-5;
 
     switch (mtd) {
         case 1: {
             double h = 1e-1;
 
-            double f_x = func()(x);
-            double f_x_h = func()(x + h);
+            double f_x = val(x);
+            double f_x_h = val(x + h);
             double df_x = (f_x_h - f_x) / h;
 
             double h_min = 1e-6;
             double h_max = 1e-2;
-            double epsilon = 1e-5;
 
             if (std::abs(f_x_h - f_x) < epsilon) {
                 h = std::min(h_max, std::max(h_min, std::abs(f_x) / std::abs(df_x)));
@@ -55,42 +53,43 @@ double NLE<T>::calc_next_x(
                 h /= 2;
             }
 
-            x = x - f_x / df_x;
+            x -= f_x / df_x;
 
             break;
         }
         case 2: {
-            x = x - func()(x) / diff(x, 1);
+            x -= val(x) / diff(x, 1);
 
             break;
         }
         case 3: {
-            x = x - func()(x) / ((func()(x) - func()(x_prev)) / (x - x_prev));
+            x -= (val(x) / (val(x) - val(x_prev))) * (x - x_prev);
+
+            break;
+        }
+        case 4: {
+            double c = (a + b) / 2;
+
+            while (std::abs(val(c)) > epsilon) {
+                if (val(a) * val(c) < 0) {
+                    b = c;
+                } else {
+                    a = c;
+                }
+
+                c = (a + b) / 2;
+            }
+
+            x = c;
 
             break;
         }
         case 5: {
-            double fa = func()(a);
-            double fb = func()(b);
-
-            if (fa * fb > 0) {
-                return x;
-            }
-
-            double c = (a + b) / 2;
-            double fc = func()(c);
-
-            if (fc == 0) {
-                return c;
-            }
-
-            if (fa * fc < 0) {
-                b = c;
+            if (val(a) * val(x) < 0) {
+                x -= (val(x) / (val(x) - val(a))) * (x - a);
             } else {
-                a = c;
+                x -= (val(x) / (val(b) - val(x))) * (b - x);
             }
-
-            x = (a + b) / 2;
 
             break;
         }
@@ -100,27 +99,64 @@ double NLE<T>::calc_next_x(
 }
 
 template<typename T>
-std::function<T(T)> NLE<T>::func(
-
+size_t NLE<T>::row_count(
+    
 ) const {
-    return _func;
+    return _func_vec.row_count();
 }
 
 template<typename T>
-void NLE<T>::set_func(
-    std::function<T(T)> func
+Vector<T> NLE<T>::func_vector(
+
+) const {
+    return _func_vec;
+}
+
+template<typename T>
+void NLE<T>::set_row_count(
+    size_t row_count
 ) {
-    _func = func;
+    _func_vec.set_row_count(row_count);
+}
+
+template<typename T>
+void NLE<T>::set_func_vector(
+    Vector<T>& vector
+) {
+    _func_vec = vector;
+}
+
+template<typename T>
+void NLE<T>::set_func_vector(
+    std::string file_path,
+    const char delimiter
+) {
+    _func_vec.set_vector(file_path, delimiter);
+}
+
+template<typename T>
+double NLE<T>::val(
+    double x
+) const {
+    size_t n = row_count();
+
+    double result = 0.0;
+
+    for (size_t i = 0; i < n; i++) {
+        result += _func_vec[i] * std::pow(x, n - 1 - i);
+    }
+
+    return result;
 }
 
 template<typename T>
 double NLE<T>::diff(
-    T x,
+    double x,
     int n,
     double h
 ) const {
     if (n == 0) {
-        return func()(x);
+        return val(x);
     } else {
         return (diff(x + h, n - 1, h) - diff(x, n - 1, h)) / h;
     }
@@ -128,22 +164,22 @@ double NLE<T>::diff(
 
 template<typename T>
 double NLE<T>::solve_iter(
-    T x0,
+    double x0,
     double a,
     double b,
     std::string method,
     int iter_max,
     double epsilon
-) {
-    T x = x0;
-    T x_prev = x + ((b - a) / 2 * 1e-10);
+) const {
+    double x = x0;
+    double x_prev = x + ((b - a) / 2 * 1e-10);
 
-    std::cout << "\n\n" << method << std::endl;
+    // std::cout << "\n\n" << method << std::endl;
 
     for (int i = 0; i < iter_max; i++) {
-        T x_next = calc_next_x(x, x_prev, a, b, method);
+        double x_next = calc_next_x(x, x_prev, a, b, method);
 
-         std::cout << "i: " << i + 1 << ", norm: " << std::abs(x - x_next) << std::endl;
+        // std::cout << "i: " << i + 1 << ", norm: " << std::abs(x - x_next) << std::endl;
 
         if (std::abs(x - x_next) < epsilon) {
             break;

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <functional>
 #include <string>
 
 #include "../headers/Vector.h"
@@ -10,46 +8,65 @@
 template<typename T>
 class NLE {
     private:
-        std::function<T(T)> _func;
+        Vector<T> _func_vec;
 
         double calc_next_x(
-            T x,
-            T x_prev,
+            double x,
+            double x_prev,
             double a,
             double b,
             std::string method
         ) const;
     public:
         NLE(
-            std::function<T(T)> func
+            size_t row_count
+        ) : _func_vec(row_count) {
+            ;
+        };
+
+        ~NLE(
+            
         ) {
-            _func = func;
+            ;
         };
 
-        ~NLE() {
-
-        };
-
-        std::function<T(T)> func(
+        size_t row_count(
 
         ) const;
 
-        void set_func(
-            std::function<T(T)> func
+        Vector<T> func_vector(
+
+        ) const;
+
+        void set_row_count(
+            size_t row_count
         );
 
+        void set_func_vector(
+            Vector<T>& vector
+        );
+
+        void set_func_vector(
+            std::string file_path,
+            const char delimiter = ' '
+        );
+
+        double val(
+            double x
+        ) const;
+
         double diff(
-            T x,
+            double x,
             int n,
             double h = 1e-5
         ) const;
 
         double solve_iter(
-            T x0,
+            double x0,
             double a,
             double b,
             std::string method = "si",
             int iter_max = 100,
             double epsilon = 1e-5
-        );
+        ) const;
 };

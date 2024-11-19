@@ -10,9 +10,6 @@
 template <typename T>
 class SoLE {
     private:
-        size_t _row_cnt;
-        size_t _col_cnt;
-
         Matrix<T> _coeffs;
         Vector<T> _terms;
 
@@ -31,12 +28,13 @@ class SoLE {
             size_t row_count,
             size_t col_count
         ) : _coeffs(row_count, col_count), _terms(row_count) {
-            _row_cnt = row_count;
-            _col_cnt = col_count;
+
         };
 
-        ~SoLE() {
+        ~SoLE(
 
+        ) {
+            ;
         };
 
         size_t row_count(
@@ -76,7 +74,8 @@ class SoLE {
         );
 
         void set_vector(
-            std::string file_path
+            std::string file_path,
+            const char delimiter = ' '
         );
 
         friend std::ostream& operator<<(

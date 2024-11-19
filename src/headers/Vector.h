@@ -42,7 +42,8 @@ class Vector {
         );
 
         void set_vector(
-            std::string file_path
+            std::string file_path,
+            const char delimiter = ' '
         );
 
         void swap(

@@ -8,7 +8,7 @@
 #include "../headers/NLE.h"
 
 
-template class NLE<int>;
+// template class NLE<int>;
 template class NLE<double>;
 
 
@@ -34,7 +34,7 @@ double NLE<T>::calc_next_x(
         mtd = 5;
     }
 
-    const double epsilon = 1e-5;
+    const double epsilon = 1e-8;
 
     switch (mtd) {
         case 1: {
@@ -99,66 +99,36 @@ double NLE<T>::calc_next_x(
 }
 
 template<typename T>
-size_t NLE<T>::row_count(
+std::function<double(T)> NLE<T>::func(
     
 ) const {
-    return _func_vec.row_count();
+    return _func;
 }
 
 template<typename T>
-Vector<T> NLE<T>::func_vector(
-
-) const {
-    return _func_vec;
-}
-
-template<typename T>
-void NLE<T>::set_row_count(
-    size_t row_count
+void NLE<T>::set_func(
+    std::function<double(T)>& func
 ) {
-    _func_vec.set_row_count(row_count);
-}
-
-template<typename T>
-void NLE<T>::set_func_vector(
-    Vector<T>& vector
-) {
-    _func_vec = vector;
-}
-
-template<typename T>
-void NLE<T>::set_func_vector(
-    std::string file_path,
-    const char delimiter
-) {
-    _func_vec.set_vector(file_path, delimiter);
+    _func = func;
 }
 
 template<typename T>
 double NLE<T>::val(
-    double x
+    T x
 ) const {
-    size_t n = row_count();
-
-    double result = 0.0;
-
-    for (size_t i = 0; i < n; i++) {
-        result += _func_vec[i] * std::pow(x, n - 1 - i);
-    }
-
-    return result;
+    return _func(x);
 }
 
 template<typename T>
 double NLE<T>::diff(
     double x,
-    int n,
+    int order,
     double h
 ) const {
-    if (n == 0) {
+    if (order == 0) {
         return val(x);
     } else {
-        return (diff(x + h, n - 1, h) - diff(x, n - 1, h)) / h;
+        return (diff(x + h, order - 1, h) - diff(x, order - 1, h)) / h;
     }
 }
 

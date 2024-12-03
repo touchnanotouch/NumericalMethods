@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <functional>
 
 #include "../headers/Vector.h"
 
@@ -8,7 +9,7 @@
 template<typename T>
 class NLE {
     private:
-        Vector<T> _func_vec;
+        std::function<double(T)> _func;
 
         double calc_next_x(
             double x,
@@ -19,8 +20,8 @@ class NLE {
         ) const;
     public:
         NLE(
-            size_t row_count
-        ) : _func_vec(row_count) {
+            std::function<double(T)> func
+        ) : _func(func) {
             ;
         };
 
@@ -30,34 +31,21 @@ class NLE {
             ;
         };
 
-        size_t row_count(
+        std::function<double(T)> func(
 
         ) const;
 
-        Vector<T> func_vector(
-
-        ) const;
-
-        void set_row_count(
-            size_t row_count
-        );
-
-        void set_func_vector(
-            Vector<T>& vector
-        );
-
-        void set_func_vector(
-            std::string file_path,
-            const char delimiter = ' '
+        void set_func(
+            std::function<double(T)>& func
         );
 
         double val(
-            double x
+            T x
         ) const;
 
         double diff(
             double x,
-            int n,
+            int order,
             double h = 1e-5
         ) const;
 

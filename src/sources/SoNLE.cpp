@@ -33,6 +33,12 @@ Vector<double> SoNLE<T>::calc_next_x(
         mtd = 3;
     } else if (method == "grad") {
         mtd = 4;
+    } else if (method == "test1") {
+        mtd = 5;
+    } else if (method == "test2") {
+        mtd = 6;
+    } else if (method == "test3") {
+        mtd = 7;
     }
 
     const double epsilon = 1e-10;
@@ -82,20 +88,21 @@ Vector<double> SoNLE<T>::calc_next_x(
         case 4: {
             const double cf = 0.9;
 
-            Matrix<double> W = jacobian(x);
+            Matrix<double> J = jacobian(x);
             Vector<double> f_x = vals(x);
 
-            Vector<double> coef = W * W.transposed() * f_x;
+            Vector<double> coef = J * J.transposed() * f_x;
             double mu = (f_x.dot(coef)) / (coef.dot(coef));
 
-            Vector<double> grad = W.transposed() * f_x * mu;
+            Vector<double> grad = J.transposed() * f_x * mu;
 
             double alpha = 1 / (1 + grad.norm());
             double new_alpha = alpha;
 
+            #pragma omp parallel for
             for (size_t k = 0; k < n; k++) {
                 Vector<double> x_new = x - grad * new_alpha;
-                Vector<double> grad_new = W.transposed() * vals(x_new) * new_alpha;
+                Vector<double> grad_new = J.transposed() * vals(x_new) * new_alpha;
 
                 if (grad_new.norm() < grad.norm()) {
                     break;
@@ -110,6 +117,99 @@ Vector<double> SoNLE<T>::calc_next_x(
 
             break;
         }
+        case 5: {
+            const double t_start = 0.0;
+            const double t_end = 1.0;
+            const double step_size = 0.1;
+
+            Vector<double> x_current = x;
+
+            #pragma omp parallel for
+            for (double t = t_start; t <= t_end; t += step_size) {
+                Vector<double> f_simple = vals(x_current);
+                Vector<double> f_compound = vals(x_current) * t + f_simple * (1 - t);
+
+                Matrix<double> J = jacobian(x_current);
+
+                x_current.set_vector(
+                    (x_current - J.inversed() * f_compound).vec()
+                );
+            }
+
+            x.set_vector(
+                x_current.vec()
+            );
+
+            break;
+        }
+        case 6: {
+            const double mu = 1e-6;
+            const double beta = 0.5;
+            
+            double alpha = 0.01;
+
+            Vector<double> x_current = x; 
+
+            while (true) {
+                Vector<double> residuals = vals(x_current);
+                Matrix<double> J = jacobian(x_current) + mu;
+
+                Vector<double> delta_x = J.inversed() * residuals;
+
+                Vector<double> x_new = x_current - delta_x * alpha;
+                Vector<double> new_residuals = vals(x_new);
+
+                while (new_residuals.norm() >= residuals.norm()) {
+                    alpha *= beta;
+                    x_new = x_current - delta_x * alpha;
+                    new_residuals = vals(x_new);
+                }
+
+                x_current = x_new;
+
+                if (new_residuals.norm() < epsilon) {
+                    break;
+                }
+            }
+
+            x.set_vector(
+                x_current.vec()
+            );
+
+            break;
+        }
+        case 7: {
+            double tolerance = 1e-5;
+            
+            int max_iterations = 100;
+            int iteration = 0;
+
+            Vector<double> x_current = x;
+            Vector<double> residuals = vals(x_current);
+            
+            while (residuals.norm() >= epsilon && iteration < max_iterations) {
+                Matrix<double> J = jacobian(x_current);
+                Vector<double> delta_x = J.inversed() * residuals;
+
+                double grid_factor = 1.0;
+                if (residuals.norm() > tolerance) {
+                    grid_factor = 0.5;
+                }
+
+                Vector<double> x_new = x_current - delta_x * grid_factor;
+                residuals = vals(x_new);
+
+                x_current.set_vector(x_new.vec());
+                iteration++;
+            }
+
+            x.set_vector(
+                x_current.vec()
+            );
+
+            break;
+        }
+
     }
 
     return x;

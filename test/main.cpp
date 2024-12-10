@@ -99,6 +99,9 @@ int main() {
         std::cout << "newton: " << sonle.solve_iter(x0, "newton", 1000, 1e-10) << std::endl;
         std::cout << "sign: " << sonle.solve_iter(x0, "sign", 1000, 1e-10) << std::endl;
         std::cout << "grad: " << sonle.solve_iter(x0, "grad", 1000, 1e-10) << std::endl;
+        std::cout << "test1: " << sonle.solve_iter(x0, "test1", 1000, 1e-10) << std::endl;
+        std::cout << "test2: " << sonle.solve_iter(x0, "test2", 1000, 1e-10) << std::endl;
+        std::cout << "test3: " << sonle.solve_iter(x0, "test3", 1000, 1e-10) << std::endl;
 
         delete[] funcs;
     } catch (const std::exception& e) {

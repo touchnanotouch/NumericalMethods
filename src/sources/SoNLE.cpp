@@ -31,6 +31,8 @@ Vector<double> SoNLE<T>::calc_next_x(
         mtd = 2;
     } else if (method == "sign") {
         mtd = 3;
+    } else if (method == "grad") {
+        mtd = 4;
     }
 
     const double epsilon = 1e-10;
@@ -74,6 +76,37 @@ Vector<double> SoNLE<T>::calc_next_x(
                     alpha *= beta;
                 }
             }
+
+            break;
+        }
+        case 4: {
+            const double cf = 0.9;
+
+            Matrix<double> W = jacobian(x);
+            Vector<double> f_x = vals(x);
+
+            Vector<double> coef = W * W.transposed() * f_x;
+            double mu = (f_x.dot(coef)) / (coef.dot(coef));
+
+            Vector<double> grad = W.transposed() * f_x * mu;
+
+            double alpha = 1 / (1 + grad.norm());
+            double new_alpha = alpha;
+
+            for (size_t k = 0; k < n; k++) {
+                Vector<double> x_new = x - grad * new_alpha;
+                Vector<double> grad_new = W.transposed() * vals(x_new) * new_alpha;
+
+                if (grad_new.norm() < grad.norm()) {
+                    break;
+                } else {
+                    new_alpha *= cf;
+                }
+            }
+
+            x.set_vector(
+                (x - grad * new_alpha).vec()
+            );
 
             break;
         }
@@ -218,9 +251,8 @@ Vector<double> SoNLE<T>::solve_iter(
             }
         }
 
-        // std::cout << "i: " << i + 1 << ", norm: " << x_norm << std::endl;
-
         if (x_norm < epsilon) {
+            std::cout << i + 1 << " iters of " << iter_max << std::endl;
             break;
         }
 

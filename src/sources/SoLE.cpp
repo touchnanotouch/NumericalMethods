@@ -148,7 +148,7 @@ Vector<T> SoLE<T>::calc_next_x(
                 break;
             }
             case 5: {
-                double cf = 0.9;
+                const double cf = 0.9;
 
                 Vector<T> grad = vect - matr * x;
                 
@@ -383,6 +383,7 @@ Vector<T> SoLE<T>::solve_iter(
         // std::cout << "i: " << i + 1 << ", norm: " << x_norm << std::endl;
 
         if (x_norm < epsilon) {
+            std::cout << i + 1 << " iters of " << iter_max << std::endl;
             break;
         }
 

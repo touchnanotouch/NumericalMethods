@@ -152,6 +152,7 @@ double NLE<T>::solve_iter(
         // std::cout << "i: " << i + 1 << ", norm: " << std::abs(x - x_next) << std::endl;
 
         if (std::abs(x - x_next) < epsilon) {
+            std::cout << i + 1 << " iters of " << iter_max << std::endl;
             break;
         }
 
